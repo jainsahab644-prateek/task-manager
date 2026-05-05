@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskPro Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface2: #273348;
+            --border: rgba(255,255,255,0.07);
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #6366f1;
+            --accent2: #818cf8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans',sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        /* Login Screen */
+        #loginScreen {
+            position: fixed; inset: 0; background: var(--bg);
+            display: flex; justify-content: center; align-items: center; z-index: 9999;
+        }
+        .login-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 24px; padding: 3rem; width: 100%; max-width: 420px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+        }
+        .login-card .logo {
+            display: flex; align-items: center; gap: 0.8rem;
+            font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;
+        }
+        .login-card .logo i { color: var(--accent); }
+        .login-card h2 { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 2rem; font-weight: 500; }
+        .login-card input {
+            width: 100%; padding: 1rem 1.2rem; border-radius: 12px;
+            border: 1px solid var(--border); background: var(--surface2);
+            color: var(--text); font-size: 1rem; font-family: inherit;
+            outline: none; transition: border 0.3s; margin-bottom: 1rem;
+        }
+        .login-card input:focus { border-color: var(--accent); }
+        .login-card button {
+            width: 100%; padding: 1rem; border-radius: 12px; border: none;
+            background: var(--accent); color: #fff; font-size: 1rem;
+            font-weight: 700; cursor: pointer; transition: all 0.3s;
+            font-family: inherit;
+        }
+        .login-card button:hover { background: var(--accent2); transform: translateY(-2px); }
+        .login-error { color: var(--danger); font-size: 0.9rem; margin-top: 0.8rem; display: none; }
+
+        /* Admin Panel */
+        #adminPanel { display: none; }
+
+        header {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem; display: flex; justify-content: space-between;
+            align-items: center; position: sticky; top: 0; z-index: 100;
+        }
+        header .logo { display: flex; align-items: center; gap: 0.8rem; font-size: 1.3rem; font-weight: 800; }
+        header .logo i { color: var(--accent); }
+        .badge-admin {
+            background: rgba(99,102,241,0.15); color: var(--accent);
+            border: 1px solid rgba(99,102,241,0.3); border-radius: 20px;
+            padding: 0.3rem 0.8rem; font-size: 0.75rem; font-weight: 700;
+        }
+        .header-right { display: flex; align-items: center; gap: 1rem; }
+        .refresh-btn {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text); padding: 0.6rem 1.2rem; border-radius: 10px;
+            cursor: pointer; font-size: 0.9rem; font-weight: 600;
+            display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s;
+            font-family: inherit;
+        }
+        .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .main { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 18px; padding: 1.5rem; display: flex; align-items: center; gap: 1.2rem;
+        }
+        .stat-icon {
+            width: 52px; height: 52px; border-radius: 14px;
+            display: flex; justify-content: center; align-items: center; font-size: 1.3rem; flex-shrink: 0;
+        }
+        .stat-card h3 { font-size: 2rem; font-weight: 800; line-height: 1; }
+        .stat-card p { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem; font-weight: 600; }
+
+        /* Users Table */
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;
+        }
+        .section-header h2 { font-size: 1.3rem; font-weight: 800; }
+        .search-bar {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 10px; padding: 0.6rem 1rem;
+            display: flex; align-items: center; gap: 0.6rem;
+        }
+        .search-bar input {
+            background: none; border: none; color: var(--text);
+            font-size: 0.9rem; font-family: inherit; outline: none; width: 220px;
+        }
+        .search-bar i { color: var(--text-muted); }
+
+        .table-wrapper {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 18px; overflow: hidden;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--surface2); }
+        th {
+            padding: 1rem 1.2rem; text-align: left;
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px;
+            color: var(--text-muted); font-weight: 700;
+        }
+        td { padding: 1rem 1.2rem; border-top: 1px solid var(--border); vertical-align: middle; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+
+        .user-cell { display: flex; align-items: center; gap: 0.9rem; }
+        .avatar-circle {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            display: flex; justify-content: center; align-items: center;
+            font-weight: 800; font-size: 1rem; flex-shrink: 0;
+        }
+        .user-name { font-weight: 700; font-size: 0.95rem; }
+        .user-email { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.1rem; }
+        .user-bio { font-size: 0.8rem; color: var(--text-muted); }
+
+        .progress-bar-wrap {
+            background: rgba(255,255,255,0.05); border-radius: 6px; height: 8px; width: 100px; overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%; border-radius: 6px;
+            background: linear-gradient(90deg, var(--accent), #8b5cf6);
+            transition: width 0.5s ease;
+        }
+        .rate-text { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+        .chip {
+            padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+        }
+
+        .view-btn {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text); padding: 0.45rem 0.9rem; border-radius: 8px;
+            cursor: pointer; font-size: 0.8rem; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: all 0.3s; font-family: inherit;
+        }
+        .view-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Task Modal */
+        .modal-backdrop {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(6px); z-index: 500; display: none;
+            justify-content: center; align-items: center;
+        }
+        .modal-backdrop.open { display: flex; }
+        .modal-box {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 24px; width: 100%; max-width: 700px;
+            max-height: 85vh; overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+        }
+        .modal-header {
+            padding: 1.5rem 1.8rem; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h3 { font-size: 1.1rem; font-weight: 800; }
+        .modal-close {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text); width: 34px; height: 34px; border-radius: 50%;
+            cursor: pointer; font-size: 1rem; display: flex;
+            align-items: center; justify-content: center; transition: all 0.3s;
+        }
+        .modal-close:hover { background: var(--danger); border-color: var(--danger); }
+        .modal-body { padding: 1.5rem 1.8rem; overflow-y: auto; }
+
+        .task-row {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 12px; padding: 1rem 1.2rem; margin-bottom: 0.8rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .task-row .task-title { font-weight: 700; font-size: 0.95rem; }
+        .task-row .task-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem; }
+        .task-tags { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; margin-left: 1rem; }
+        .empty-modal { text-align: center; padding: 3rem; color: var(--text-muted); }
+
+        .loading-spinner {
+            display: inline-block; width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.2); border-top-color: var(--accent);
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 1000px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            th:nth-child(4), td:nth-child(4) { display: none; }
+        }
+        @media (max-width: 640px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .main { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="loginScreen">
+    <div class="login-card">
+        <div class="logo"><i class="fas fa-shield-halved"></i> TaskPro</div>
+        <h2>Admin Panel Access</h2>
+        <input type="password" id="adminKeyInput" placeholder="Enter admin secret key" autocomplete="off">
+        <button onclick="adminLogin()"><i class="fas fa-unlock"></i> Access Panel</button>
+        <p class="login-error" id="loginError">❌ Invalid secret key. Access denied.</p>
+    </div>
+</div>
+
+<!-- Admin Panel -->
+<div id="adminPanel">
+    <header>
+        <div class="logo">
+            <i class="fas fa-shield-halved"></i> TaskPro
+            <span class="badge-admin">ADMIN</span>
+        </div>
+        <div class="header-right">
+            <span id="lastUpdated" style="font-size:0.8rem; color: var(--text-muted);"></span>
+            <button class="refresh-btn" onclick="loadAll()">
+                <i class="fas fa-rotate-right"></i> Refresh
+            </button>
+        </div>
+    </header>
+
+    <div class="main">
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(99,102,241,0.15); color: var(--accent);">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <h3 id="statUsers"><span class="loading-spinner"></span></h3>
+                    <p>Total Users</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(16,185,129,0.15); color: var(--success);">
+                    <i class="fas fa-list-check"></i>
+                </div>
+                <div>
+                    <h3 id="statTasks"><span class="loading-spinner"></span></h3>
+                    <p>Total Tasks</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(245,158,11,0.15); color: var(--warning);">
+                    <i class="fas fa-circle-check"></i>
+                </div>
+                <div>
+                    <h3 id="statCompleted"><span class="loading-spinner"></span></h3>
+                    <p>Completed Tasks</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(239,68,68,0.15); color: var(--danger);">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div>
+                    <h3 id="statToday"><span class="loading-spinner"></span></h3>
+                    <p>Today's Tasks</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="section-header">
+            <h2><i class="fas fa-users" style="color:var(--accent); margin-right:0.5rem;"></i>Active Users</h2>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="userSearch" placeholder="Search by name or email..." oninput="filterUsers()">
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Profession</th>
+                        <th>Bio</th>
+                        <th>Tasks</th>
+                        <th>Completion</th>
+                        <th>Joined</th>
+                        <th>Last Active</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <tr><td colspan="7" style="text-align:center; padding: 3rem; color: var(--text-muted);"><span class="loading-spinner"></span> Loading users...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Task Modal -->
+<div class="modal-backdrop" id="taskModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="modalTitle">User Tasks</h3>
+            <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<script>
+    const ADMIN_SECRET = 'taskpro_admin_2026'; // Change this if you update .env
+    let allUsers = [];
+
+    // ---- Auth ----
+    function adminLogin() {
+        const key = document.getElementById('adminKeyInput').value.trim();
+        if (key === ADMIN_SECRET) {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            loadAll();
+        } else {
+            document.getElementById('loginError').style.display = 'block';
+        }
+    }
+
+    document.getElementById('adminKeyInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') adminLogin();
+    });
+
+    // ---- API Calls ----
+    async function adminFetch(url) {
+        const res = await fetch(url, { headers: { 'x-admin-secret': ADMIN_SECRET } });
+        if (!res.ok) throw new Error('API error: ' + res.status);
+        return res.json();
+    }
+
+    async function loadAll() {
+        loadStats();
+        loadUsers();
+        document.getElementById('lastUpdated').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+    }
+
+    async function loadStats() {
+        try {
+            const stats = await adminFetch('/api/admin/stats');
+            document.getElementById('statUsers').textContent = stats.totalUsers;
+            document.getElementById('statTasks').textContent = stats.totalTasks;
+            document.getElementById('statCompleted').textContent = stats.completedTasks;
+            document.getElementById('statToday').textContent = stats.todayTasks;
+        } catch (err) {
+            console.error('Stats error:', err);
+        }
+    }
+
+    async function loadUsers() {
+        const tbody = document.getElementById('usersTableBody');
+        try {
+            allUsers = await adminFetch('/api/admin/users');
+            renderUsers(allUsers);
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--danger);">Failed to load users.</td></tr>`;
+        }
+    }
+
+    function renderUsers(users) {
+        const tbody = document.getElementById('usersTableBody');
+        if (users.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:2rem; color:var(--text-muted);">No users found.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = users.map(u => `
+            <tr>
+                <td>
+                    <div class="user-cell">
+                        <div class="avatar-circle">${(u.name || u.email).charAt(0).toUpperCase()}</div>
+                        <div>
+                            <div class="user-name">${escHtml(u.name)}</div>
+                            <div class="user-email">${escHtml(u.email)}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem;">
+                        <i class="fas fa-briefcase" style="color:var(--accent); font-size:0.8rem; opacity:0.7;"></i>
+                        <span class="user-profession">${escHtml(u.profession) || '<span style="color:#475569">Not set</span>'}</span>
+                    </div>
+                </td>
+                <td><span class="user-bio" style="font-size:0.85rem; color:var(--text-muted);">${escHtml(u.bio) || '<span style="color:#475569">—</span>'}</span></td>
+                <td>
+                    <span style="font-weight:800; font-size:1.1rem;">${u.totalTasks}</span>
+                    <span style="color:var(--text-muted); font-size:0.8rem;"> total</span><br>
+                    <span style="color:var(--success); font-size:0.8rem;">${u.completedTasks} done</span>
+                </td>
+                <td>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" style="width:${u.completionRate}%"></div>
+                    </div>
+                    <div class="rate-text">${u.completionRate}%</div>
+                </td>
+                <td style="font-size:0.85rem; color:var(--text-muted);">${formatDate(u.joinedAt)}</td>
+                <td style="font-size:0.85rem; color:var(--text-muted);">${timeAgo(u.lastActivity)}</td>
+                <td>
+                    <button class="view-btn" onclick="viewUserTasks('${u._id}', '${escHtml(u.name || u.email)}')">
+                        <i class="fas fa-eye"></i> Tasks
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function filterUsers() {
+        const q = document.getElementById('userSearch').value.toLowerCase();
+        const filtered = allUsers.filter(u =>
+            (u.name || '').toLowerCase().includes(q) ||
+            u.email.toLowerCase().includes(q) ||
+            (u.bio || '').toLowerCase().includes(q)
+        );
+        renderUsers(filtered);
+    }
+
+    // ---- Task Modal ----
+    async function viewUserTasks(userId, userName) {
+        document.getElementById('modalTitle').textContent = `📋 Tasks — ${userName}`;
+        document.getElementById('modalBody').innerHTML = `<div style="text-align:center; padding:2rem;"><span class="loading-spinner"></span> Loading...</div>`;
+        document.getElementById('taskModal').classList.add('open');
+
+        try {
+            const tasks = await adminFetch(`/api/admin/users/${userId}/tasks`);
+            if (tasks.length === 0) {
+                document.getElementById('modalBody').innerHTML = `<div class="empty-modal"><i class="fas fa-inbox" style="font-size:2.5rem; opacity:0.3;"></i><p style="margin-top:1rem;">No tasks yet</p></div>`;
+                return;
+            }
+            const priorityColor = { High: '#ef4444', Medium: '#f59e0b', Low: '#10b981' };
+            document.getElementById('modalBody').innerHTML = tasks.map(t => `
+                <div class="task-row">
+                    <div>
+                        <div class="task-title" style="${t.isCompleted ? 'text-decoration:line-through; opacity:0.5;' : ''}">${escHtml(t.title)}</div>
+                        <div class="task-meta">
+                            <i class="far fa-calendar"></i> ${t.date || '—'} &nbsp;
+                            <i class="far fa-clock"></i> ${t.time || '—'}
+                            ${t.category ? ` &nbsp; <i class="fas fa-tag"></i> ${t.category}` : ''}
+                        </div>
+                    </div>
+                    <div class="task-tags">
+                        <span class="chip" style="background:${priorityColor[t.priority] || '#6366f1'}22; color:${priorityColor[t.priority] || '#6366f1'}; border:1px solid ${priorityColor[t.priority] || '#6366f1'}44;">${t.priority || 'N/A'}</span>
+                        ${t.isCompleted ? `<span class="chip" style="background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.3);">Done</span>` : `<span class="chip" style="background:rgba(99,102,241,0.1);color:#818cf8;border:1px solid rgba(99,102,241,0.3);">Active</span>`}
+                        ${t.isDaily ? `<span class="chip" style="background:rgba(14,165,233,0.1);color:#0ea5e9;border:1px solid rgba(14,165,233,0.3);">Daily</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            document.getElementById('modalBody').innerHTML = `<div style="text-align:center; color:var(--danger); padding:2rem;">Failed to load tasks.</div>`;
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('taskModal').classList.remove('open');
+    }
+    document.getElementById('taskModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('taskModal')) closeModal();
+    });
+
+    // ---- Helpers ----
+    function formatDate(d) {
+        if (!d) return '—';
+        return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+    function timeAgo(d) {
+        if (!d) return '—';
+        const diff = (Date.now() - new Date(d)) / 1000;
+        if (diff < 60) return 'just now';
+        if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+        return `${Math.floor(diff/86400)}d ago`;
+    }
+    function escHtml(str) {
+        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+</script>
+</body>
+</html>

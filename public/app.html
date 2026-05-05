@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- FullCalendar -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Auth Overlay -->
+    <div id="authOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(245, 245, 245, 0.95); backdrop-filter: blur(20px); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+        <div class="glass-panel" style="padding: 3rem; width: 100%; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 10px 40px rgba(0,0,0,0.05);">
+            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--accent-color), var(--primary-color)); border-radius: 14px; display: inline-flex; justify-content: center; align-items: center; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);">
+                <i class="fas fa-check-double" style="color: white; font-size: 1.5rem;"></i>
+            </div>
+            <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text-primary); letter-spacing: -0.5px;">TaskPro</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem; font-weight: 500;" id="authSubtitle">Sign in to your account</p>
+            
+            <form id="authForm" style="display: flex; flex-direction: column; gap: 1rem;">
+                <input type="text" id="authName" placeholder="Full Name" style="display: none; width: 100%; padding: 1rem; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); background: rgba(255,255,255,0.8); font-size: 1rem; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; outline: none; transition: border 0.3s;" onfocus="this.style.borderColor='var(--accent-color)'" onblur="this.style.borderColor='rgba(0,0,0,0.05)'">
+                <input type="text" id="authWork" placeholder="Work / Profession" style="display: none; width: 100%; padding: 1rem; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); background: rgba(255,255,255,0.8); font-size: 1rem; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; outline: none; transition: border 0.3s;" onfocus="this.style.borderColor='var(--accent-color)'" onblur="this.style.borderColor='rgba(0,0,0,0.05)'">
+                <input type="email" id="authEmail" placeholder="Email Address" required style="width: 100%; padding: 1rem; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); background: rgba(255,255,255,0.8); font-size: 1rem; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; outline: none; transition: border 0.3s;" onfocus="this.style.borderColor='var(--accent-color)'" onblur="this.style.borderColor='rgba(0,0,0,0.05)'">
+                <input type="password" id="authPassword" placeholder="Password" required style="width: 100%; padding: 1rem; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); background: rgba(255,255,255,0.8); font-size: 1rem; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; outline: none; transition: border 0.3s;" onfocus="this.style.borderColor='var(--accent-color)'" onblur="this.style.borderColor='rgba(0,0,0,0.05)'">
+                <button type="submit" class="submit-btn glow-effect" id="authSubmitBtn" style="margin-top: 1rem; border-radius: 12px; padding: 1rem;">Sign In</button>
+            </form>
+            
+            <p style="margin-top: 1.5rem; font-size: 0.95rem; color: var(--text-secondary); font-weight: 500;">
+                <span id="authToggleText">Don't have an account?</span> 
+                <a href="#" id="authToggleBtn" style="color: var(--accent-color); font-weight: 800; text-decoration: none;">Sign Up</a>
+            </p>
+            <p id="authErrorMsg" style="color: var(--danger-color); font-weight: 600; margin-top: 1rem; font-size: 0.9rem; display: none;"></p>
+        </div>
+    </div>
+
+    <!-- Ambient Background Glows -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar glass-panel">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-check-double"></i></div>
+                <h1>TaskPro</h1>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-btn" data-view="analytics">
+                    <i class="fas fa-chart-pie"></i> <span>Dashboard</span>
+                </button>
+                <button class="nav-btn active" data-view="today">
+                    <i class="fas fa-calendar-day"></i> <span>Today</span>
+                </button>
+                <button class="nav-btn" data-view="upcoming">
+                    <i class="fas fa-calendar-alt"></i> <span>Upcoming</span>
+                </button>
+                <button class="nav-btn" data-view="daily">
+                    <i class="fas fa-redo"></i> <span>Daily Tasks</span>
+                </button>
+                <button class="nav-btn" data-view="calendar">
+                    <i class="far fa-calendar-check"></i> <span>Calendar</span>
+                </button>
+            </nav>
+
+            <!-- Pomodoro Timer Widget -->
+            <div class="pomodoro-widget glass-panel">
+                <h4><i class="fas fa-stopwatch"></i> Focus Timer</h4>
+                <div class="timer-display" id="timerDisplay">25:00</div>
+                <div class="pomodoro-progress-bg">
+                    <div class="pomodoro-progress-fill" id="pomodoroProgress" style="width: 100%"></div>
+                </div>
+                <div class="timer-controls">
+                    <button id="startTimer" title="Start"><i class="fas fa-play"></i></button>
+                    <button id="pauseTimer" title="Pause"><i class="fas fa-pause"></i></button>
+                    <button id="resetTimer" title="Reset"><i class="fas fa-undo"></i></button>
+                </div>
+            </div>
+
+            <div class="sidebar-footer" style="display: flex; flex-direction: column; gap: 0.8rem;">
+                <button class="add-task-btn glow-effect" id="openModalBtn">
+                    <i class="fas fa-plus"></i> New Task
+                </button>
+                <button class="nav-btn" id="logoutBtn" style="justify-content: center; color: var(--danger-color); border: 1px solid rgba(244, 63, 94, 0.2);">
+                    <i class="fas fa-sign-out-alt"></i> <span>Sign Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="mainContentArea">
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 id="viewTitle">Today's Tasks</h2>
+                    <div class="date-display" id="currentDate"></div>
+                </div>
+                <div class="header-right">
+                    <div class="search-box glass-panel">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search tasks...">
+                    </div>
+                    <button id="mobileSearchBtn" class="action-btn glass-panel" title="Search" style="display:none; justify-content:center; align-items:center; width:44px; height:44px; border-radius:50%; font-size:1rem; color:var(--text-secondary);">
+                        <i class="fas fa-magnifying-glass"></i>
+                    </button>
+                    <button id="clearCompletedBtn" class="action-btn glass-panel glow-hover" title="Clear Completed Tasks">
+                        <i class="fas fa-broom"></i>
+                    </button>
+                    <div class="profile-menu-container" style="position: relative;">
+                        <button id="profileAvatarBtn" class="action-btn glass-panel" title="Profile" style="border-radius: 50%; width: 45px; height: 45px; padding: 0; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-weight: 800; overflow: hidden; cursor: pointer; font-size: 1.1rem; border: 2px solid rgba(99,102,241,0.4); box-shadow: 0 4px 12px rgba(99,102,241,0.35);">
+                            <span id="headerAvatarInitial" style="color: #fff; font-weight: 800; font-size: 1rem;"><i class="far fa-user"></i></span>
+                        </button>
+                        <div class="profile-dropdown glass-panel" id="profileDropdown" style="display: none; position: absolute; top: 60px; right: 0; width: 320px; z-index: 1000; padding: 1.5rem; display: none; flex-direction: column; gap: 1rem; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 10px 40px rgba(0,0,0,0.1); border-radius: 20px;">
+                            <div class="dropdown-header" style="display: flex; gap: 1rem; align-items: center;">
+                                <div id="dropdownAvatarInitial" style="width: 50px; height: 50px; background: var(--text-primary); color: #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; font-weight: bold;">U</div>
+                                <div style="flex: 1;">
+                                    <h4 id="dropdownNameText" style="margin: 0; font-weight: 800; font-size: 1.1rem; color: var(--text-primary);">User</h4>
+                                    <p id="dropdownBioText" style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">...</p>
+                                </div>
+                            </div>
+                            <hr style="border: none; border-top: 1px solid rgba(0,0,0,0.05);">
+                            <form id="profileForm" style="display: flex; flex-direction: column; gap: 0.8rem;">
+                                <input type="text" id="profileName" placeholder="Update Name" style="padding: 0.7rem; font-size: 0.9rem; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05); background: rgba(0,0,0,0.02);">
+                                <input type="text" id="profileProfession" placeholder="Update Profession" style="padding: 0.7rem; font-size: 0.9rem; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05); background: rgba(0,0,0,0.02);">
+                                <textarea id="profileBio" rows="2" placeholder="Update Bio / Status..." style="padding: 0.7rem; font-size: 0.9rem; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05); background: rgba(0,0,0,0.02);"></textarea>
+                                <button type="submit" class="submit-btn" style="padding: 0.6rem; font-size: 0.85rem; border-radius: 8px;">Save Profile</button>
+                            </form>
+                            <hr style="border: none; border-top: 1px solid rgba(0,0,0,0.05);">
+                            <div>
+                                <p style="font-size: 0.8rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--text-secondary);">30-Day Consistency</p>
+                                <div class="chart-wrapper" style="width: 100%; height: 100px;">
+                                    <canvas id="consistencyChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Progress Bar (Today View Only) -->
+            <div class="today-progress glass-panel" id="todayProgress">
+                <div class="progress-info">
+                    <h3>Daily Goal Progress</h3>
+                    <span id="progressText">0 / 0 Completed</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- List View Container -->
+            <div class="tasks-container" id="tasksContainer">
+                <div class="empty-state">
+                    <div class="loader-spinner"></div>
+                    <p>Syncing your workflow...</p>
+                </div>
+            </div>
+
+            <!-- Calendar View Container -->
+            <div class="calendar-container glass-panel" id="calendarContainer">
+                <div id="calendar"></div>
+            </div>
+
+            <!-- Analytics Dashboard Container -->
+            <div class="analytics-container" id="analyticsContainer">
+                <div class="stats-grid">
+                    <div class="stat-card glass-panel hover-lift">
+                        <div class="icon-circle" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6;"><i class="fas fa-tasks"></i></div>
+                        <div class="stat-info">
+                            <h3 id="statTotal">0</h3>
+                            <p>Total Tasks</p>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel hover-lift">
+                        <div class="icon-circle" style="background: rgba(16, 185, 129, 0.2); color: #10b981;"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-info">
+                            <h3 id="statCompleted">0</h3>
+                            <p>Completed</p>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel hover-lift">
+                        <div class="icon-circle" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;"><i class="fas fa-fire"></i></div>
+                        <div class="stat-info">
+                            <h3 id="statRate">0%</h3>
+                            <p>Completion Rate</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="charts-section">
+                    <div class="chart-card glass-panel hover-lift">
+                        <h4>Tasks by Category</h4>
+                        <div class="chart-wrapper">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card glass-panel hover-lift">
+                        <h4>Tasks by Priority</h4>
+                        <div class="chart-wrapper">
+                            <canvas id="priorityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Task Modal -->
+    <div class="modal-overlay" id="taskModal">
+        <div class="modal glass-panel">
+            <div class="modal-header">
+                <h3 id="modalTitle">Create New Task</h3>
+                <button class="close-btn glow-hover" id="closeModalBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="taskForm">
+                <div class="form-group">
+                    <label for="title">Task Title</label>
+                    <input type="text" id="title" required placeholder="What needs to be done?">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category">
+                            <option value="Work">Work</option>
+                            <option value="Personal">Personal</option>
+                            <option value="Study">Study</option>
+                            <option value="Health">Health</option>
+                            <option value="Other" selected>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="priority">Priority</label>
+                        <select id="priority">
+                            <option value="High">High</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description (Optional)</label>
+                    <textarea id="description" rows="2" placeholder="Add some details..."></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="time">Time</label>
+                        <input type="time" id="time" required>
+                    </div>
+                </div>
+                
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="isDaily" class="custom-toggle">
+                    <label for="isDaily">Make this a Daily Routine</label>
+                </div>
+                <button type="submit" class="submit-btn glow-effect" id="modalSubmitBtn">Save Task</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- AI Chatbot Widget -->
+    <button class="chat-fab glow-effect" id="chatFab">
+        <i class="fas fa-robot"></i>
+    </button>
+
+    <div class="chat-widget glass-panel" id="chatWidget" style="display: none;">
+        <div class="chat-header">
+            <h3><i class="fas fa-sparkles"></i> AI Assistant</h3>
+            <button class="close-btn" id="closeChatBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message ai-message">
+                Hello! I am your personal productivity AI. Ask me about your tasks or how to stay focused!
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="Ask something...">
+            <button id="sendChatBtn" class="icon-btn"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
