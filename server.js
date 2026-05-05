@@ -19,13 +19,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log('Connected to MongoDB successfully!'))
-.catch((err) => {
-  console.error('Failed to connect to MongoDB:', err.message);
-  console.log('\n--- IMPORTANT ---');
-  console.log('Please ensure you have replaced <YOUR_CLUSTER_URL> in the .env file with your actual MongoDB cluster address.');
-  console.log('-----------------\n');
-});
+  .then(() => console.log('Connected to MongoDB successfully!'))
+  .catch((err) => {
+    console.error('Failed to connect to MongoDB:', err.message);
+    console.log('\n--- IMPORTANT ---');
+    console.log('Please ensure you have replaced <YOUR_CLUSTER_URL> in the .env file with your actual MongoDB cluster address.');
+    console.log('-----------------\n');
+  });
 
 // API Routes
 
@@ -48,11 +48,11 @@ app.post('/api/auth/register', async (req, res) => {
     const { email, password, name, work } = req.body;
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ error: 'User already exists.' });
-    
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ email, password: hashedPassword, name, profession: work });
     await user.save();
-    
+
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'fallback_secret_key', { expiresIn: '7d' });
     res.status(201).json({ token, email: user.email });
   } catch (err) {
@@ -65,10 +65,10 @@ app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ error: 'Invalid email or password.' });
-    
+
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) return res.status(400).json({ error: 'Invalid email or password.' });
-    
+
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'fallback_secret_key', { expiresIn: '7d' });
     res.json({ token, email: user.email });
   } catch (err) {
@@ -146,7 +146,7 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    
+
     // Define the tool
     const rescheduleTaskTool = {
       name: "rescheduleTask",
@@ -165,15 +165,15 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
     const rawTasks = await Task.find({ userId: req.user.id });
     // Minify tasks to save massive amounts of input tokens and avoid rate limits
     const tasks = rawTasks.map(t => ({
-        id: t._id, title: t.title, priority: t.priority,
-        date: t.date, time: t.time, category: t.category, completed: t.isCompleted
+      id: t._id, title: t.title, priority: t.priority,
+      date: t.date, time: t.time, category: t.category, completed: t.isCompleted
     }));
-    
+
     // Calculate local date string for the prompt
     const d = new Date();
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
     const todayDate = d.toISOString().split('T')[0];
-    
+
     const systemPrompt = `You are a helpful AI productivity assistant in a Task Manager app.
 Today's date is: ${todayDate}.
 Here is the user's current list of tasks in JSON format:
@@ -186,34 +186,34 @@ IMPORTANT RULES:
 4. If you call a function, you do not need to say anything else.
 5. If they ask a general productivity question, answer concisely.`;
 
-    const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.5-flash",
-        systemInstruction: systemPrompt,
-        tools: [{ functionDeclarations: [rescheduleTaskTool] }]
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      systemInstruction: systemPrompt,
+      tools: [{ functionDeclarations: [rescheduleTaskTool] }]
     });
 
     const chat = model.startChat({
-        history: req.body.history || []
+      history: req.body.history || []
     });
     const result = await chat.sendMessage(message);
     const response = result.response;
-    
+
     const functionCalls = response.functionCalls();
-    
+
     if (functionCalls && functionCalls.length > 0) {
-        const call = functionCalls[0];
-        if (call.name === "rescheduleTask") {
-            const { taskId, newDate, newTime } = call.args;
-            // Perform the database update
-            await Task.findOneAndUpdate({ _id: taskId, userId: req.user.id }, { date: newDate, time: newTime });
-            
-            return res.json({ 
-                reply: `I have successfully rescheduled the task to ${newDate} at ${newTime}. Let me know if you need anything else!`, 
-                refreshTasks: true 
-            });
-        }
+      const call = functionCalls[0];
+      if (call.name === "rescheduleTask") {
+        const { taskId, newDate, newTime } = call.args;
+        // Perform the database update
+        await Task.findOneAndUpdate({ _id: taskId, userId: req.user.id }, { date: newDate, time: newTime });
+
+        return res.json({
+          reply: `I have successfully rescheduled the task to ${newDate} at ${newTime}. Let me know if you need anything else!`,
+          refreshTasks: true
+        });
+      }
     }
-    
+
     const responseText = response.text();
     res.json({ reply: responseText, refreshTasks: false });
   } catch (err) {
@@ -262,7 +262,7 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
 app.get('/api/admin/users', authenticateAdmin, async (req, res) => {
   try {
     const users = await User.find().select('-password').sort({ createdAt: -1 }).lean();
-    
+
     const usersWithStats = await Promise.all(users.map(async (user) => {
       const [totalTasks, completedTasks] = await Promise.all([
         Task.countDocuments({ userId: user._id }).maxTimeMS(8000),
@@ -282,7 +282,7 @@ app.get('/api/admin/users', authenticateAdmin, async (req, res) => {
         lastActivity: lastTask ? lastTask.updatedAt : user.createdAt,
       };
     }));
-    
+
     res.json(usersWithStats);
   } catch (err) {
     res.status(500).json({ error: err.message });
