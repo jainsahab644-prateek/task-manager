@@ -248,39 +248,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupEventListeners() {
-        // Mobile Bottom Nav
-        const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
-        bottomNavItems.forEach(item => {
+        // Mobile Bottom Nav - simple, direct, no bugs
+        document.querySelectorAll('.bottom-nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
-                bottomNavItems.forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                
                 const view = item.getAttribute('data-view');
-                if (view) {
-                    currentView = view;
-                    // Sync with desktop sidebar nav highlight
-                    navButtons.forEach(btn => {
-                        btn.classList.remove('active');
-                        if (btn.getAttribute('data-view') === view) btn.classList.add('active');
-                    });
-                    switchView(view);
-                }
+                if (view) switchView(view);
             });
         });
 
         // Mobile FAB
         const mobileAddBtn = document.getElementById('mobileAddBtn');
-        if (mobileAddBtn) {
-            mobileAddBtn.addEventListener('click', () => {
-                openModal();
-            });
-        }
+        if (mobileAddBtn) mobileAddBtn.addEventListener('click', () => openModal());
 
-        // Navigation
+        // Desktop Navigation
         navButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                switchView(e.currentTarget.dataset.view);
+                const view = e.currentTarget.dataset.view;
+                if (view) switchView(view);
             });
         });
 
@@ -295,7 +280,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Modal
         openModalBtn.addEventListener('click', () => openModal());
-        
         closeModalBtn.addEventListener('click', () => modalOverlay.classList.remove('active'));
         modalOverlay.addEventListener('click', (e) => {
             if(e.target === modalOverlay) modalOverlay.classList.remove('active');
@@ -321,38 +305,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function switchView(view) {
-        if(view === currentView && mainContentArea && mainContentArea.style.opacity === '1') return;
-        
+        // Update state
         currentView = view;
-        
-        // Sync desktop nav highlight
-        const navButtons = document.querySelectorAll('.nav-btn');
-        navButtons.forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.getAttribute('data-view') === view) btn.classList.add('active');
+
+        // Sync ALL desktop nav buttons
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-view') === view);
         });
 
-        // Sync mobile nav highlight
-        const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
-        bottomNavItems.forEach(item => {
-            item.classList.remove('active');
-            if (item.getAttribute('data-view') === view) item.classList.add('active');
+        // Sync ALL mobile nav items
+        document.querySelectorAll('.bottom-nav-item').forEach(item => {
+            item.classList.toggle('active', item.getAttribute('data-view') === view);
         });
 
-        // Transition effect
-        if(mainContentArea) {
+        // Animate & render the new view
+        if (mainContentArea) {
+            mainContentArea.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
             mainContentArea.style.opacity = '0';
-            mainContentArea.style.transform = 'translateY(10px)';
-            
+            mainContentArea.style.transform = 'translateY(8px)';
+
             setTimeout(() => {
                 updateViewTitle();
                 handleViewChange();
-                
-                requestAnimationFrame(() => {
-                    mainContentArea.style.opacity = '1';
-                    mainContentArea.style.transform = 'translateY(0)';
-                });
-            }, 200);
+                mainContentArea.style.opacity = '1';
+                mainContentArea.style.transform = 'translateY(0)';
+            }, 160);
         } else {
             updateViewTitle();
             handleViewChange();
