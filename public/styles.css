@@ -404,8 +404,8 @@ textarea { resize: none; }
 
 /* Responsive */
 @media (max-width: 768px) {
-    body, html { overflow-x: hidden; }
-    .app-container { flex-direction: column; height: auto; min-height: 100vh; width: 100vw; border-radius: 0; gap: 0; margin: 0; padding: 0; }
+    body, html { overflow: hidden; height: 100%; position: fixed; width: 100%; }
+    .app-container { flex-direction: column; height: 100vh; height: 100dvh; width: 100vw; border-radius: 0; gap: 0; margin: 0; padding: 0; overflow: hidden; position: relative; }
     
     /* Hide sidebar on mobile - will be replaced by bottom nav */
     .sidebar { display: none !important; }
@@ -434,13 +434,13 @@ textarea { resize: none; }
     /* Profile dropdown: full-width centered on mobile */
     .profile-dropdown { right: 0 !important; left: auto !important; width: calc(100vw - 2rem) !important; max-width: 340px !important; }
     
-    .main-content { padding: 0; flex-grow: 1; overflow: visible; }
-    .tasks-container { padding: 0 1rem 1rem 1rem; height: auto; overflow: visible; }
+    .main-content { padding: 0; flex-grow: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; padding-bottom: 85px; } /* Space for bottom nav */
+    .tasks-container { padding: 0 1rem 1rem 1rem; flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     
     /* Kanban Mobile Fix - Tabbed View */
-    .kanban-board { display: flex; flex-direction: column; gap: 0; height: auto; }
-    .kanban-column { height: auto; min-height: 200px; max-height: none; overflow: visible; padding: 1rem 0; border: none; background: transparent; }
-    .kanban-tasks { max-height: none; overflow-y: visible; }
+    .kanban-board { display: flex; flex-direction: column; flex-grow: 1; overflow: hidden; height: 100%; }
+    .kanban-column { display: flex; flex-direction: column; height: 100%; overflow: hidden; padding: 0; border: none; background: transparent; }
+    .kanban-tasks { flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2rem; }
     
     /* Mobile Priority Tabs System */
     .mobile-priority-tabs { display: flex; width: 100%; gap: 0.5rem; margin-bottom: 1rem; }
