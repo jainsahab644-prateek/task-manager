@@ -217,7 +217,12 @@ IMPORTANT RULES:
     const responseText = response.text();
     res.json({ reply: responseText, refreshTasks: false });
   } catch (err) {
-    console.error("Chatbot Error:", err.message || err);
+    console.error("AI Error:", err);
+    if (err.message.includes("503") || err.message.includes("high demand")) {
+        return res.status(503).json({ 
+            error: "The AI is currently experiencing very high demand. Please wait a few seconds and try again. Your tasks are safe!" 
+        });
+    }
     const errMsg = err.message || "Unknown error";
     if (errMsg.includes('API_KEY') || errMsg.includes('API key')) {
       return res.status(500).json({ error: "Invalid Gemini API key. Please check your .env file." });
