@@ -1240,7 +1240,7 @@ document.addEventListener('DOMContentLoaded', () => {
             icon: '/favicon.ico',
             badge: '/favicon.ico',
             tag: `task-${task._id}`,  // prevents duplicate notifications
-            requireInteraction: false,
+            requireInteraction: true,
             silent: false
         });
 
@@ -1249,9 +1249,6 @@ document.addEventListener('DOMContentLoaded', () => {
             window.focus();
             notification.close();
         };
-
-        // Auto-close after 8 seconds
-        setTimeout(() => notification.close(), 8000);
     }
 
 });
