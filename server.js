@@ -187,7 +187,7 @@ IMPORTANT RULES:
 5. If they ask a general productivity question, answer concisely.`;
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash",
       systemInstruction: systemPrompt,
       tools: [{ functionDeclarations: [rescheduleTaskTool] }]
     });
@@ -195,7 +195,28 @@ IMPORTANT RULES:
     const chat = model.startChat({
       history: req.body.history || []
     });
-    const result = await chat.sendMessage(message);
+
+    // Retry logic for high demand spikes (503 errors)
+    let result;
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+        try {
+            result = await chat.sendMessage(message);
+            break; // Success!
+        } catch (e) {
+            attempts++;
+            if (attempts >= maxAttempts) throw e; // Re-throw if all retries failed
+            if (e.message.includes("503") || e.message.includes("demand")) {
+                console.log(`AI busy, retrying... (Attempt ${attempts}/${maxAttempts})`);
+                await new Promise(resolve => setTimeout(resolve, 1500)); // Wait 1.5s
+            } else {
+                throw e; // If it's a different error (like 404), don't retry
+            }
+        }
+    }
+
     const response = result.response;
 
     const functionCalls = response.functionCalls();
