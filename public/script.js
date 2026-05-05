@@ -248,6 +248,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupEventListeners() {
+        // Mobile Bottom Nav
+        const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
+        bottomNavItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                bottomNavItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                
+                const view = item.getAttribute('data-view');
+                if (view) {
+                    currentView = view;
+                    // Sync with desktop sidebar nav highlight
+                    navButtons.forEach(btn => {
+                        btn.classList.remove('active');
+                        if (btn.getAttribute('data-view') === view) btn.classList.add('active');
+                    });
+                    switchView(view);
+                }
+            });
+        });
+
+        // Mobile FAB
+        const mobileAddBtn = document.getElementById('mobileAddBtn');
+        if (mobileAddBtn) {
+            mobileAddBtn.addEventListener('click', () => {
+                openModal();
+            });
+        }
+
         // Navigation
         navButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {

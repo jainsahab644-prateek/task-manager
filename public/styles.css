@@ -71,11 +71,9 @@ body {
 }
 
 /* Sidebar */
-.sidebar { 
-    width: 250px; padding: 2rem 1.5rem; display: flex; flex-direction: column; 
-    overflow-y: auto; overflow-x: hidden;
-    flex-shrink: 0;
-}
+.sidebar { width: 260px; height: 100%; padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 2rem; border-right: 1px solid rgba(0,0,0,0.05); flex-shrink: 0; }
+.bottom-nav { display: none; } /* Hidden by default */
+.mobile-fab { display: none; } /* Hidden by default */
 .right-sidebar { 
     width: 280px; padding: 2rem 1.5rem; display: flex; flex-direction: column; 
     overflow-y: auto; overflow-x: hidden;
@@ -409,16 +407,21 @@ textarea { resize: none; }
     body, html { overflow-x: hidden; }
     .app-container { flex-direction: column; height: auto; min-height: 100vh; width: 100vw; border-radius: 0; gap: 0; margin: 0; padding: 0; }
     
-    .sidebar { width: 100%; height: auto; padding: 1rem; flex-direction: column; border-radius: 0; border-bottom: 1px solid rgba(0,0,0,0.05); gap: 1rem; }
-    .right-sidebar { width: 100%; height: auto; padding: 1.5rem; border-radius: 0; border-top: 1px solid rgba(0,0,0,0.05); margin-top: 1rem; }
-    .logo { margin-bottom: 0; width: 100%; justify-content: center; }
-    .nav-menu { flex-direction: row; overflow-x: auto; width: 100%; padding-bottom: 0.5rem; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-    .nav-menu::-webkit-scrollbar { display: none; }
-    .nav-btn { padding: 0.6rem 1rem; white-space: nowrap; font-size: 0.9rem; flex-shrink: 0; }
-    .nav-btn span { display: inline-block; }
-    .pomodoro-widget { display: none; } /* Hide pomodoro on mobile to save space */
-    .sidebar-footer { flex-direction: row !important; width: 100%; gap: 0.5rem !important; }
-    .sidebar-footer button { flex: 1; padding: 0.8rem; font-size: 0.9rem; }
+    /* Hide sidebar on mobile - will be replaced by bottom nav */
+    .sidebar { display: none !important; }
+    .right-sidebar { width: 100%; height: auto; padding: 1.5rem; border-radius: 0; border-top: 1px solid rgba(0,0,0,0.05); margin-top: 1rem; margin-bottom: 80px; }
+    
+    /* Bottom Navigation Bar for Mobile */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 75px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(0,0,0,0.08); display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding: 0 1rem; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
+    .bottom-nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-secondary); text-decoration: none; font-size: 0.75rem; font-weight: 700; gap: 0.3rem; transition: all 0.2s; position: relative; flex: 1; height: 100%; }
+    .bottom-nav-item i { font-size: 1.3rem; transition: transform 0.3s; }
+    .bottom-nav-item.active { color: var(--text-primary); }
+    .bottom-nav-item.active i { transform: translateY(-3px); }
+    .bottom-nav-item.active::after { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 25px; height: 3px; background: var(--text-primary); border-radius: 0 0 4px 4px; }
+    
+    /* Mobile Floating Action Button (FAB) */
+    .mobile-fab { position: fixed; bottom: 90px; right: 20px; width: 56px; height: 56px; border-radius: 20px; background: var(--text-primary); color: #fff; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; box-shadow: 0 8px 25px rgba(0,0,0,0.25); z-index: 999; border: none; cursor: pointer; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .mobile-fab:active { transform: scale(0.85); }
     
     /* Mobile Header: compact row - title on left, actions on right */
     .top-header { flex-direction: row; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 1rem 1rem 0; flex-wrap: nowrap; }
@@ -462,4 +465,10 @@ textarea { resize: none; }
     .form-row { flex-direction: column; gap: 0.5rem; }
     
     #authOverlay > div { padding: 2rem !important; margin: 1rem; border-radius: 16px !important; }
+
+    /* Task Card Mobile Optimization */
+    .task-card { padding: 1.2rem; margin-bottom: 1rem; }
+    .task-actions { gap: 0.8rem; }
+    .task-actions button { width: 40px; height: 40px; font-size: 1rem; }
+    .category-badge { padding: 0.3rem 0.8rem; font-size: 0.75rem; }
 }
