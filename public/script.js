@@ -280,28 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Navigation
         navButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                if(e.currentTarget.dataset.view === currentView) return; // Prevent unnecessary re-render
-                
-                navButtons.forEach(b => b.classList.remove('active'));
-                const target = e.currentTarget;
-                target.classList.add('active');
-                
-                currentView = target.dataset.view;
-                
-                // Trigger transition effect
-                mainContentArea.style.opacity = '0';
-                mainContentArea.style.transform = 'translateY(10px)';
-                
-                setTimeout(() => {
-                    updateViewTitle();
-                    handleViewChange();
-                    
-                    // Fade back in
-                    requestAnimationFrame(() => {
-                        mainContentArea.style.opacity = '1';
-                        mainContentArea.style.transform = 'translateY(0)';
-                    });
-                }, 200);
+                switchView(e.currentTarget.dataset.view);
             });
         });
 
@@ -339,6 +318,46 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.addEventListener('keypress', (e) => {
             if(e.key === 'Enter') handleChatSubmit();
         });
+    }
+
+    function switchView(view) {
+        if(view === currentView && document.querySelector('.main-content-area').style.opacity === '1') return;
+        
+        currentView = view;
+        
+        // Sync desktop nav highlight
+        const navButtons = document.querySelectorAll('.nav-btn');
+        navButtons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.getAttribute('data-view') === view) btn.classList.add('active');
+        });
+
+        // Sync mobile nav highlight
+        const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
+        bottomNavItems.forEach(item => {
+            item.classList.remove('active');
+            if (item.getAttribute('data-view') === view) item.classList.add('active');
+        });
+
+        // Transition effect
+        const mainContentArea = document.querySelector('.main-content-area');
+        if(mainContentArea) {
+            mainContentArea.style.opacity = '0';
+            mainContentArea.style.transform = 'translateY(10px)';
+            
+            setTimeout(() => {
+                updateViewTitle();
+                handleViewChange();
+                
+                requestAnimationFrame(() => {
+                    mainContentArea.style.opacity = '1';
+                    mainContentArea.style.transform = 'translateY(0)';
+                });
+            }, 200);
+        } else {
+            updateViewTitle();
+            handleViewChange();
+        }
     }
 
     function openModal() {
