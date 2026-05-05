@@ -379,22 +379,23 @@
         }
 
         @media (max-width: 768px) {
-            nav { padding: 1rem 1.5rem; }
-            .logo span { display: none; }
+            body { overflow-x: hidden; width: 100%; }
+            nav { padding: 1rem 1.5rem; width: 100%; }
             .nav-links { display: none; }
+            .logo span { display: none; }
             .nav-cta { padding: 0.5rem 1rem; font-size: 0.85rem; }
             
-            .hero { padding: 8rem 1.5rem 4rem; }
-            .hero h1 { font-size: 2.5rem; letter-spacing: -1px; }
+            .hero { padding: 8rem 1.5rem 4rem; width: 100%; }
+            .hero h1 { font-size: 2.2rem; letter-spacing: -1px; }
             .hero p { font-size: 1.1rem; }
             .cta-group { flex-direction: column; width: 100%; gap: 1rem; }
             .btn-primary { width: 100%; justify-content: center; }
             
-            .preview-container { margin-bottom: 4rem; }
+            .preview-container { margin-bottom: 4rem; width: 100%; }
             .preview-frame { padding: 0.8rem; transform: none !important; }
             .browser-url { font-size: 0.6rem; }
             
-            .section-title { font-size: 2rem; }
+            .section-title { font-size: 1.8rem; }
             .feature-grid { grid-template-columns: 1fr; }
             .footer-content { flex-direction: column; text-align: center; gap: 2rem; }
         }
