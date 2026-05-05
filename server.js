@@ -20,6 +20,7 @@ app.use(express.json());
 // --- Contact Form Routes ---
 
 // Public submission
+app.get('/api/contact', (req, res) => res.json({ message: 'API is working! Please use POST to submit.' }));
 app.post('/api/contact', async (req, res) => {
   try {
     const { name, email, message } = req.body;
