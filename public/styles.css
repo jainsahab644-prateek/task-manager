@@ -404,8 +404,13 @@ textarea { resize: none; }
 
 /* Responsive */
 @media (max-width: 768px) {
-    body, html { overflow: hidden; height: 100%; position: fixed; width: 100%; }
-    .app-container { flex-direction: column; height: 100vh; height: 100dvh; width: 100vw; border-radius: 0; gap: 0; margin: 0; padding: 0; overflow: hidden; position: relative; }
+    /* Only lock the screen on the app dashboard */
+    body.app-body, html:has(body.app-body) { overflow: hidden; height: 100%; position: fixed; width: 100%; }
+    body.app-body .app-container { flex-direction: column; height: 100vh; height: 100dvh; width: 100vw; border-radius: 0; gap: 0; margin: 0; padding: 0; overflow: hidden; position: relative; }
+    
+    /* Normal scrolling for other pages (Contact, Privacy, etc.) */
+    body:not(.app-body) { overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+    body:not(.app-body) .app-container { flex-direction: column; min-height: 100vh; width: 100vw; }
     
     /* Hide sidebar on mobile - will be replaced by bottom nav */
     .sidebar { display: none !important; }
