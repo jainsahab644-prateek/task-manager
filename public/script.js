@@ -252,10 +252,63 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.bottom-nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
+                // "More" button opens the sheet, not switchView
+                if (item.id === 'mobileMoreBtn') {
+                    openMobileSheet();
+                    return;
+                }
                 const view = item.getAttribute('data-view');
                 if (view) switchView(view);
             });
         });
+
+        // Mobile More Sheet logic
+        const mobileSheet = document.getElementById('mobileSheet');
+        const mobileSheetOverlay = document.getElementById('mobileSheetOverlay');
+
+        function openMobileSheet() {
+            mobileSheet.classList.add('open');
+            mobileSheetOverlay.classList.add('open');
+        }
+        function closeMobileSheet() {
+            mobileSheet.classList.remove('open');
+            mobileSheetOverlay.classList.remove('open');
+        }
+
+        if (mobileSheetOverlay) mobileSheetOverlay.addEventListener('click', closeMobileSheet);
+
+        // Sheet: Dashboard
+        const sheetDashboard = document.getElementById('sheetDashboard');
+        if (sheetDashboard) sheetDashboard.addEventListener('click', () => {
+            closeMobileSheet();
+            switchView('analytics');
+        });
+
+        // Sheet: AI
+        const sheetAiBtn = document.getElementById('sheetAiBtn');
+        if (sheetAiBtn) sheetAiBtn.addEventListener('click', () => {
+            closeMobileSheet();
+            const chatWidget = document.getElementById('chatWidget');
+            if (chatWidget) chatWidget.style.display = chatWidget.style.display === 'none' ? 'flex' : 'none';
+        });
+
+        // Sheet: Profile
+        const sheetProfileBtn = document.getElementById('sheetProfileBtn');
+        if (sheetProfileBtn) sheetProfileBtn.addEventListener('click', () => {
+            closeMobileSheet();
+            const profileDropdown = document.getElementById('profileDropdown');
+            if (profileDropdown) {
+                profileDropdown.style.display = profileDropdown.style.display === 'none' ? 'flex' : 'none';
+            }
+        });
+
+        // Sheet: Logout
+        const sheetLogoutBtn = document.getElementById('sheetLogoutBtn');
+        if (sheetLogoutBtn) sheetLogoutBtn.addEventListener('click', () => {
+            closeMobileSheet();
+            logout();
+        });
+
 
         // Mobile FAB
         const mobileAddBtn = document.getElementById('mobileAddBtn');

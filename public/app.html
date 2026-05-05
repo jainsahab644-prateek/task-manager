@@ -311,7 +311,59 @@
             <i class="fas fa-calendar"></i>
             <span>Calendar</span>
         </a>
+        <a href="#" class="bottom-nav-item" id="mobileMoreBtn">
+            <i class="fas fa-grid-2"></i>
+            <span>More</span>
+        </a>
     </nav>
+
+    <!-- Mobile More Menu Sheet -->
+    <div class="mobile-sheet-overlay" id="mobileSheetOverlay"></div>
+    <div class="mobile-sheet" id="mobileSheet">
+        <div class="mobile-sheet-handle"></div>
+        <h3 class="mobile-sheet-title">Menu</h3>
+        <div class="mobile-sheet-items">
+            <button class="mobile-sheet-item" data-view="analytics" id="sheetDashboard">
+                <div class="sheet-item-icon" style="background: rgba(99,102,241,0.1); color: #6366f1;">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div>
+                    <strong>Dashboard</strong>
+                    <p>View analytics & stats</p>
+                </div>
+                <i class="fas fa-chevron-right sheet-arrow"></i>
+            </button>
+            <button class="mobile-sheet-item" id="sheetAiBtn">
+                <div class="sheet-item-icon" style="background: rgba(16,185,129,0.1); color: #10b981;">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div>
+                    <strong>AI Assistant</strong>
+                    <p>Chat with your productivity AI</p>
+                </div>
+                <i class="fas fa-chevron-right sheet-arrow"></i>
+            </button>
+            <button class="mobile-sheet-item" id="sheetProfileBtn">
+                <div class="sheet-item-icon" style="background: rgba(245,158,11,0.1); color: #f59e0b;">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <strong>Profile</strong>
+                    <p>Update your name & bio</p>
+                </div>
+                <i class="fas fa-chevron-right sheet-arrow"></i>
+            </button>
+            <button class="mobile-sheet-item danger" id="sheetLogoutBtn">
+                <div class="sheet-item-icon" style="background: rgba(244,63,94,0.1); color: #f43f5e;">
+                    <i class="fas fa-sign-out-alt"></i>
+                </div>
+                <div>
+                    <strong>Sign Out</strong>
+                    <p>Log out of your account</p>
+                </div>
+            </button>
+        </div>
+    </div>
 
     <!-- Mobile Floating Action Button -->
     <button class="mobile-fab" id="mobileAddBtn">
