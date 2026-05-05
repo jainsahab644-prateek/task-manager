@@ -5,6 +5,7 @@ const cors = require('cors');
 const path = require('path');
 const Task = require('./models/Task');
 const User = require('./models/User');
+const Contact = require('./models/Contact');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -137,6 +138,50 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
+
+// --- Contact Form Routes ---
+
+// Public submission
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { name, email, message } = req.body;
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: 'Please fill in all fields.' });
+    }
+    const newContact = new Contact({ name, email, message });
+    await newContact.save();
+    res.status(201).json({ message: 'Thank you for your message! We will get back to you soon.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin view (protected by secret)
+app.get('/api/admin/contacts', async (req, res) => {
+  const secret = req.headers['x-admin-secret'];
+  if (secret !== process.env.ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    const contacts = await Contact.find().sort({ createdAt: -1 });
+    res.json(contacts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin delete
+app.delete('/api/admin/contacts/:id', async (req, res) => {
+  const secret = req.headers['x-admin-secret'];
+  if (secret !== process.env.ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    await Contact.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Message deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 app.post('/api/chat', authenticateToken, async (req, res) => {
   try {
@@ -272,14 +317,15 @@ const authenticateAdmin = (req, res, next) => {
 // GET /api/admin/stats - Overview stats
 app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
   try {
-    const [totalUsers, totalTasks, completedTasks] = await Promise.all([
+    const [totalUsers, totalTasks, completedTasks, totalMessages] = await Promise.all([
       User.estimatedDocumentCount(),
       Task.estimatedDocumentCount(),
       Task.countDocuments({ isCompleted: true }).maxTimeMS(8000),
+      Contact.estimatedDocumentCount()
     ]);
     const todayStr = new Date().toISOString().split('T')[0];
     const todayTasks = await Task.countDocuments({ date: todayStr }).maxTimeMS(8000);
-    res.json({ totalUsers, totalTasks, completedTasks, todayTasks });
+    res.json({ totalUsers, totalTasks, completedTasks, todayTasks, totalMessages });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

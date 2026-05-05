@@ -184,7 +184,7 @@
             </div>
         </div>
 
-        <form style="margin-top: 3rem;">
+        <form id="contactForm" style="margin-top: 3rem;">
             <div class="form-group">
                 <label for="name">Full Name</label>
                 <input type="text" id="name" placeholder="Enter your name" required>
@@ -197,12 +197,56 @@
                 <label for="message">Message</label>
                 <textarea id="message" rows="5" placeholder="How can we help?" required></textarea>
             </div>
-            <button type="submit" class="btn-submit">Send Message</button>
+            <button type="submit" class="btn-submit" id="submitBtn">Send Message</button>
+            <p id="formStatus" style="margin-top: 1rem; font-weight: 700; text-align: center; display: none;"></p>
         </form>
     </div>
 
     <footer>
         &copy; 2026 TaskPro. All rights reserved.
     </footer>
+
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            const formStatus = document.getElementById('formStatus');
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            formStatus.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, message })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    formStatus.textContent = data.message;
+                    formStatus.style.color = '#10b981';
+                    formStatus.style.display = 'block';
+                    document.getElementById('contactForm').reset();
+                } else {
+                    formStatus.textContent = data.error || 'Something went wrong.';
+                    formStatus.style.color = '#f43f5e';
+                    formStatus.style.display = 'block';
+                }
+            } catch (err) {
+                formStatus.textContent = 'Connection error. Please try again.';
+                formStatus.style.color = '#f43f5e';
+                formStatus.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Message';
+            }
+        });
+    </script>
 </body>
 </html>
