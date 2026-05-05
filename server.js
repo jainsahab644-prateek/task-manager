@@ -17,49 +17,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// --- Contact Form Routes ---
-
-// Public submission
-app.get('/submit-contact', (req, res) => res.json({ message: 'API is working! Please use POST to submit.' }));
-app.post('/submit-contact', async (req, res) => {
-  try {
-    const { name, email, message } = req.body;
-    if (!name || !email || !message) {
-      return res.status(400).json({ error: 'Please fill in all fields.' });
-    }
-    const newContact = new Contact({ name, email, message });
-    await newContact.save();
-    res.status(201).json({ message: 'Thank you for your message! We will get back to you soon.' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Admin view (protected by secret)
-app.get('/admin-contacts', async (req, res) => {
-  const secret = req.headers['x-admin-secret'];
-  if (secret !== process.env.ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized' });
-
-  try {
-    const contacts = await Contact.find().sort({ createdAt: -1 });
-    res.json(contacts);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Admin delete
-app.delete('/admin-contacts/:id', async (req, res) => {
-  const secret = req.headers['x-admin-secret'];
-  if (secret !== process.env.ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized' });
-
-  try {
-    await Contact.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Message deleted' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// (Contact routes moved to bottom)
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -183,9 +141,6 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
-
-// (Contact routes moved above)
-
 
 app.post('/api/chat', authenticateToken, async (req, res) => {
   try {
@@ -338,6 +293,7 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
 // GET /api/admin/users - All users with their task stats
 app.get('/api/admin/users', authenticateAdmin, async (req, res) => {
   try {
+    console.log("Fetching all users for admin panel...");
     const users = await User.find().select('-password').sort({ createdAt: -1 }).lean();
 
     const usersWithStats = await Promise.all(users.map(async (user) => {
@@ -367,14 +323,51 @@ app.get('/api/admin/users', authenticateAdmin, async (req, res) => {
 });
 
 // GET /api/admin/users/:id/tasks - Tasks of a specific user
-app.get('/api/admin/users/:id/tasks', authenticateAdmin, async (req, res) => {
-  try {
-    const tasks = await Task.find({ userId: req.params.id }).sort({ date: 1, time: 1 });
-    res.json(tasks);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+ app.get('/api/admin/users/:id/tasks', authenticateAdmin, async (req, res) => {
+   try {
+     const tasks = await Task.find({ userId: req.params.id }).sort({ date: 1, time: 1 });
+     res.json(tasks);
+   } catch (err) {
+     res.status(500).json({ error: err.message });
+   }
+ });
+ 
+ // --- Contact Form Routes (Moved to bottom for priority) ---
+ 
+ // Public submission
+ app.post('/api/contact', async (req, res) => {
+   try {
+     const { name, email, message } = req.body;
+     if (!name || !email || !message) {
+       return res.status(400).json({ error: 'Please fill in all fields.' });
+     }
+     const newContact = new Contact({ name, email, message });
+     await newContact.save();
+     res.status(201).json({ message: 'Thank you for your message! We will get back to you soon.' });
+   } catch (err) {
+     res.status(500).json({ error: err.message });
+   }
+ });
+ 
+ // Admin view
+ app.get('/api/admin/contacts', authenticateAdmin, async (req, res) => {
+   try {
+     const contacts = await Contact.find().sort({ createdAt: -1 });
+     res.json(contacts);
+   } catch (err) {
+     res.status(500).json({ error: err.message });
+   }
+ });
+ 
+ // Admin delete
+ app.delete('/api/admin/contacts/:id', authenticateAdmin, async (req, res) => {
+   try {
+     await Contact.findByIdAndDelete(req.params.id);
+     res.json({ message: 'Message deleted' });
+   } catch (err) {
+     res.status(500).json({ error: err.message });
+   }
+ });
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

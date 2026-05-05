@@ -415,7 +415,7 @@
     async function loadContacts() {
         const tbody = document.getElementById('contactsTableBody');
         try {
-            const contacts = await adminFetch('/admin-contacts');
+            const contacts = await adminFetch('/api/admin/contacts');
             renderContacts(contacts);
         } catch (err) {
             tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:2rem; color:var(--danger);">Failed to load messages.</td></tr>`;
@@ -450,7 +450,7 @@
     async function deleteContact(id) {
         if (!confirm('Delete this message?')) return;
         try {
-            const res = await fetch(`/admin-contacts/${id}`, { 
+            const res = await fetch(`/api/admin/contacts/${id}`, { 
                 method: 'DELETE',
                 headers: { 'x-admin-secret': ADMIN_SECRET } 
             });
