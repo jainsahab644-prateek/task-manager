@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function switchView(view) {
-        if(view === currentView && document.querySelector('.main-content-area').style.opacity === '1') return;
+        if(view === currentView && mainContentArea && mainContentArea.style.opacity === '1') return;
         
         currentView = view;
         
