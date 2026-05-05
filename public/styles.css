@@ -23,14 +23,18 @@ body {
     background-color: var(--bg-color);
     color: var(--text-primary);
     min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
+    overflow-x: hidden;
     position: relative;
     /* Subtle dot grid overlay for texture */
     background-image: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
     background-size: 20px 20px;
+}
+
+/* Centering for the Dashboard and Login/Landing views */
+body.app-body, body.landing-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 /* Ambient Animated Glows - Pastel Light Mode */
