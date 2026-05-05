@@ -379,20 +379,33 @@
         }
 
         @media (max-width: 768px) {
-            .hero h1 { font-size: 3rem; }
-            .nav-links { display: none; }
-            .mockup-sidebar { display: none; }
-            .mockup-grid { grid-template-columns: 1fr; }
+            nav { padding: 1rem 1.5rem; }
+            .logo span { display: none; }
+            .nav-cta { padding: 0.5rem 1rem; font-size: 0.85rem; }
+            
+            .hero { padding: 8rem 1.5rem 4rem; }
+            .hero h1 { font-size: 2.5rem; letter-spacing: -1px; }
+            .hero p { font-size: 1.1rem; }
+            .cta-group { flex-direction: column; width: 100%; gap: 1rem; }
+            .btn-primary { width: 100%; justify-content: center; }
+            
+            .preview-container { margin-bottom: 4rem; }
+            .preview-frame { padding: 0.8rem; transform: none !important; }
+            .browser-url { font-size: 0.6rem; }
+            
+            .section-title { font-size: 2rem; }
+            .feature-grid { grid-template-columns: 1fr; }
+            .footer-content { flex-direction: column; text-align: center; gap: 2rem; }
         }
     </style>
 </head>
-<body class="landing-body">
+<body class="landing-page">
     <div class="bg-orb orb-1"></div>
     <div class="bg-orb orb-2"></div>
 
     <nav>
         <a href="#" class="logo">
-            <i class="fas fa-check-double"></i> TaskPro
+            <i class="fas fa-check-double"></i> <span>TaskPro</span>
         </a>
         <div class="nav-links">
             <a href="#features">Features</a>
