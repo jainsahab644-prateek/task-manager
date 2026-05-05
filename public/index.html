@@ -22,10 +22,15 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
+        }
+
         body {
             background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #e0e7ff 100%);
             color: var(--text-primary);
-            overflow-x: hidden;
             line-height: 1.6;
         }
 
@@ -37,8 +42,8 @@
             z-index: -1;
             animation: float 20s infinite ease-in-out alternate;
         }
-        .orb-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: rgba(99, 102, 241, 0.2); }
-        .orb-2 { bottom: 10%; right: -5%; width: 600px; height: 600px; background: rgba(236, 72, 153, 0.15); animation-delay: -5s; }
+        .orb-1 { top: -10%; left: -10%; width: 40vw; height: 40vw; background: rgba(99, 102, 241, 0.2); }
+        .orb-2 { bottom: 10%; right: -10%; width: 50vw; height: 50vw; background: rgba(236, 72, 153, 0.15); animation-delay: -5s; }
 
         @keyframes float {
             0% { transform: translate(0, 0) scale(1); }
