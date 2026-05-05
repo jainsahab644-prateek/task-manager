@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Use - TaskPro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --accent-color: #6366f1;
+            --primary-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.8;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-gradient);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 0.9rem;
+        }
+        .content-container {
+            max-width: 900px;
+            margin: 4rem auto;
+            padding: 4rem;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            letter-spacing: -1.5px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 2.5rem 0 1rem;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+        .last-updated {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 2rem;
+        }
+        footer {
+            margin-top: auto;
+            padding: 3rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+        @media (max-width: 768px) {
+            .content-container { margin: 2rem 1rem; padding: 2.5rem 2rem; }
+            h1 { font-size: 2.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="/" class="logo">
+            <div class="logo-icon"><i class="fas fa-check-double"></i></div>
+            <span>TaskPro</span>
+        </a>
+        <a href="/app.html" style="text-decoration: none; font-weight: 700; color: var(--accent-color);">Back to App</a>
+    </header>
+
+    <div class="content-container">
+        <div class="last-updated">Last Updated: May 5, 2026</div>
+        <h1>Terms of Use</h1>
+        
+        <p>Welcome to TaskPro. By using our service, you agree to these terms. Please read them carefully.</p>
+
+        <h2>1. Using our Services</h2>
+        <p>You must follow any policies made available to you within the Services. Don't misuse our Services. For example, don't interfere with our Services or try to access them using a method other than the interface and the instructions that we provide.</p>
+
+        <h2>2. Your TaskPro Account</h2>
+        <p>You need a TaskPro account in order to use our Services. You are responsible for the activity that happens on or through your TaskPro account. To protect your account, keep your password confidential.</p>
+
+        <h2>3. Content in our Services</h2>
+        <p>Our Services allow you to upload, submit, store, send or receive content (like your tasks and reminders). You retain ownership of any intellectual property rights that you hold in that content. In short, what belongs to you stays yours.</p>
+
+        <h2>4. Modifying and Terminating our Services</h2>
+        <p>We are constantly changing and improving our Services. We may add or remove functionalities or features, and we may suspend or stop a Service altogether.</p>
+
+        <h2>5. Our Warranties and Disclaimers</h2>
+        <p>We provide our Services using a commercially reasonable level of skill and care and we hope that you will enjoy using them. But there are certain things that we don't promise about our Services.</p>
+
+        <h2>6. Liability for our Services</h2>
+        <p>When permitted by law, TaskPro will not be responsible for lost profits, revenues, or data, financial losses or indirect, special, consequential, exemplary, or punitive damages.</p>
+    </div>
+
+    <footer>
+        &copy; 2026 TaskPro. All rights reserved.
+    </footer>
+</body>
+</html>
