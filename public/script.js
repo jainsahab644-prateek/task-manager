@@ -340,7 +340,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Transition effect
-        const mainContentArea = document.querySelector('.main-content-area');
         if(mainContentArea) {
             mainContentArea.style.opacity = '0';
             mainContentArea.style.transform = 'translateY(10px)';
