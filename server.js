@@ -187,7 +187,7 @@ IMPORTANT RULES:
 5. If they ask a general productivity question, answer concisely.`;
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-flash-latest",
       systemInstruction: systemPrompt,
       tools: [{ functionDeclarations: [rescheduleTaskTool] }]
     });
@@ -196,23 +196,24 @@ IMPORTANT RULES:
       history: req.body.history || []
     });
 
-    // Retry logic for high demand spikes (503 errors)
+    // Production-level retry logic: 5 attempts with increasing delay
     let result;
     let attempts = 0;
-    const maxAttempts = 3;
+    const maxAttempts = 5;
     
     while (attempts < maxAttempts) {
         try {
             result = await chat.sendMessage(message);
-            break; // Success!
+            break; 
         } catch (e) {
             attempts++;
-            if (attempts >= maxAttempts) throw e; // Re-throw if all retries failed
-            if (e.message.includes("503") || e.message.includes("demand")) {
-                console.log(`AI busy, retrying... (Attempt ${attempts}/${maxAttempts})`);
-                await new Promise(resolve => setTimeout(resolve, 1500)); // Wait 1.5s
+            if (attempts >= maxAttempts) throw e;
+            const delay = attempts * 2000; // 2s, 4s, 6s...
+            if (e.message.includes("503") || e.message.includes("demand") || e.message.includes("429")) {
+                console.log(`AI busy, retry ${attempts}/${maxAttempts} in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
             } else {
-                throw e; // If it's a different error (like 404), don't retry
+                throw e;
             }
         }
     }
