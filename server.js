@@ -20,8 +20,8 @@ app.use(express.json());
 // --- Contact Form Routes ---
 
 // Public submission
-app.get('/api/contact', (req, res) => res.json({ message: 'API is working! Please use POST to submit.' }));
-app.post('/api/contact', async (req, res) => {
+app.get('/submit-contact', (req, res) => res.json({ message: 'API is working! Please use POST to submit.' }));
+app.post('/submit-contact', async (req, res) => {
   try {
     const { name, email, message } = req.body;
     if (!name || !email || !message) {
@@ -36,7 +36,7 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // Admin view (protected by secret)
-app.get('/api/admin/contacts', async (req, res) => {
+app.get('/admin-contacts', async (req, res) => {
   const secret = req.headers['x-admin-secret'];
   if (secret !== process.env.ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -49,7 +49,7 @@ app.get('/api/admin/contacts', async (req, res) => {
 });
 
 // Admin delete
-app.delete('/api/admin/contacts/:id', async (req, res) => {
+app.delete('/admin-contacts/:id', async (req, res) => {
   const secret = req.headers['x-admin-secret'];
   if (secret !== process.env.ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized' });
 
