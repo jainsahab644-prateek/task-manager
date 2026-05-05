@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskPro Admin | Messages</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface2: #273348;
+            --border: rgba(255,255,255,0.07);
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #6366f1;
+            --danger: #ef4444;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans',sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem; }
+        
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 3rem; background: var(--surface); padding: 1.5rem 2rem;
+            border-radius: 20px; border: 1px solid var(--border);
+        }
+        
+        .logo { display: flex; align-items: center; gap: 1rem; font-size: 1.5rem; font-weight: 800; }
+        .logo i { color: var(--accent); }
+        
+        .back-btn { 
+            text-decoration: none; color: var(--text); font-weight: 700; font-size: 0.9rem;
+            display: flex; align-items: center; gap: 0.5rem; opacity: 0.8; transition: 0.3s;
+        }
+        .back-btn:hover { opacity: 1; transform: translateX(-5px); }
+
+        .glass-card {
+            background: var(--surface); border-radius: 24px; border: 1px solid var(--border);
+            padding: 2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+
+        h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.8rem; }
+        h1 i { color: var(--accent); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th { text-align: left; padding: 1.2rem 1rem; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+        td { padding: 1.5rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+        
+        .sender-info { font-weight: 700; margin-bottom: 0.3rem; }
+        .sender-email { font-size: 0.8rem; color: var(--text-muted); }
+        .message-text { font-size: 0.95rem; line-height: 1.6; color: var(--text); white-space: pre-wrap; max-width: 500px; }
+        .message-date { font-size: 0.85rem; color: var(--text-muted); }
+
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--danger); padding: 0.6rem 1rem; border-radius: 12px; cursor: pointer;
+            font-weight: 700; font-size: 0.85rem; transition: 0.3s; display: flex; align-items: center; gap: 0.5rem;
+        }
+        .delete-btn:hover { background: var(--danger); color: white; transform: scale(1.05); }
+
+        #authOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg); z-index: 9999; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; gap: 1.5rem;
+        }
+        input {
+            background: var(--surface2); border: 1px solid var(--border); color: white;
+            padding: 1rem 1.5rem; border-radius: 14px; width: 300px; font-size: 1rem; outline: none;
+        }
+        .auth-btn {
+            background: var(--accent); color: white; border: none; padding: 1rem 2rem;
+            border-radius: 14px; font-weight: 800; cursor: pointer; width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div id="authOverlay">
+        <h2 style="font-weight:800; letter-spacing:-1px;">Admin Messages Access</h2>
+        <input type="password" id="adminSecret" placeholder="Enter Admin Secret Key...">
+        <button class="auth-btn" onclick="authenticate()">Unlock Messages</button>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo"><i class="fas fa-check-double"></i> TaskPro Admin</div>
+            <a href="admin.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        </header>
+
+        <div class="glass-card">
+            <h1><i class="fas fa-envelope"></i> User Inquiries</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sender</th>
+                        <th>Message</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="messagesTableBody">
+                    <tr><td colspan="4" style="text-align:center; padding:3rem; color:var(--text-muted);">Initializing...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let ADMIN_SECRET = sessionStorage.getItem('admin_secret');
+        if (ADMIN_SECRET) {
+            document.getElementById('authOverlay').style.display = 'none';
+            loadMessages();
+        }
+
+        function authenticate() {
+            const val = document.getElementById('adminSecret').value;
+            if (!val) return alert('Secret required');
+            ADMIN_SECRET = val;
+            sessionStorage.setItem('admin_secret', val);
+            document.getElementById('authOverlay').style.display = 'none';
+            loadMessages();
+        }
+
+        async function loadMessages() {
+            const tbody = document.getElementById('messagesTableBody');
+            try {
+                const res = await fetch('/api/admin/contacts', {
+                    headers: { 'x-admin-secret': ADMIN_SECRET }
+                });
+                if (!res.ok) throw new Error('Unauthorized');
+                const messages = await res.json();
+                renderMessages(messages);
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:3rem; color:var(--danger);">Unauthorized. Please refresh and try again.</td></tr>`;
+                sessionStorage.removeItem('admin_secret');
+            }
+        }
+
+        function renderMessages(messages) {
+            const tbody = document.getElementById('messagesTableBody');
+            if (messages.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:3rem; color:var(--text-muted);">No messages found.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = messages.map(m => `
+                <tr>
+                    <td>
+                        <div class="sender-info">${esc(m.name)}</div>
+                        <div class="sender-email">${esc(m.email)}</div>
+                    </td>
+                    <td><div class="message-text">${esc(m.message)}</div></td>
+                    <td><div class="message-date">${new Date(m.createdAt).toLocaleString()}</div></td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteMsg('${m._id}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function deleteMsg(id) {
+            if (!confirm('Delete this message?')) return;
+            try {
+                const res = await fetch('/api/admin/contacts/' + id, {
+                    method: 'DELETE',
+                    headers: { 'x-admin-secret': ADMIN_SECRET }
+                });
+                if (res.ok) loadMessages();
+            } catch (err) {
+                alert('Failed to delete');
+            }
+        }
+
+        function esc(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
