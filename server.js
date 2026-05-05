@@ -83,6 +83,49 @@ app.post('/api/auth/login', async (req, res) => {
 // Get all tasks
 app.get('/api/tasks', authenticateToken, async (req, res) => {
   try {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // 1. Find all daily rituals from the past or today
+    const dailyRituals = await Task.find({ 
+      userId: req.user.id, 
+      isDaily: true 
+    });
+
+    // 2. Identify which ones need to be spawned for today
+    // We group by title to ensure we don't duplicate rituals for the same thing
+    const ritualTitlesToday = dailyRituals
+      .filter(t => t.date === today)
+      .map(t => t.title);
+
+    const ritualsToSpawn = dailyRituals.filter(t => 
+      t.date < today && !ritualTitlesToday.includes(t.title)
+    );
+
+    // 3. Spawn missing rituals for today
+    // We use a Map to only spawn unique titles from the past rituals
+    const uniqueRitualsToSpawn = new Map();
+    ritualsToSpawn.forEach(t => {
+      if (!uniqueRitualsToSpawn.has(t.title)) {
+        uniqueRitualsToSpawn.set(t.title, t);
+      }
+    });
+
+    if (uniqueRitualsToSpawn.size > 0) {
+      const newTasks = Array.from(uniqueRitualsToSpawn.values()).map(t => ({
+        userId: req.user.id,
+        title: t.title,
+        description: t.description,
+        category: t.category,
+        priority: t.priority,
+        time: t.time,
+        date: today,
+        isDaily: true,
+        isCompleted: false
+      }));
+      await Task.insertMany(newTasks);
+    }
+
+    // 4. Finally return all tasks
     const tasks = await Task.find({ userId: req.user.id }).sort({ date: 1, time: 1 });
     res.json(tasks);
   } catch (err) {
