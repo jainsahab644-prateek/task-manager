@@ -1188,32 +1188,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function checkUpcomingTaskNotifications() {
-        if (Notification.permission !== 'granted') return;
+        if (Notification.permission !== 'granted') {
+            console.warn('Notifications permission not granted');
+            return;
+        }
         if (!tasks || tasks.length === 0) return;
 
         const now = new Date();
 
         tasks.forEach(task => {
-            // Skip completed tasks
             if (task.isCompleted) return;
-            // Skip if no date/time
             if (!task.date || !task.time) return;
-            // Skip if already notified this session
             if (notifiedTasks.has(task._id)) return;
 
-            // Build the task datetime
-            const taskDateTime = new Date(`${task.date}T${task.time}:00`);
+            // Safe parsing: task.date (YYYY-MM-DD) and task.time (HH:MM)
+            const [year, month, day] = task.date.split('-').map(Number);
+            const [hour, minute] = task.time.split(':').map(Number);
+            const taskDateTime = new Date(year, month - 1, day, hour, minute);
+            
             const diffMs = taskDateTime - now;
             const diffMinutes = diffMs / (1000 * 60);
 
-            // Fire if between 9.5 and 10.5 minutes away (1-minute window checked every 60s)
-            if (diffMinutes >= 9.5 && diffMinutes <= 10.5) {
+            // Notify if task is due in the next 11 minutes (allowing some buffer)
+            // But skip if it's too far in the past (e.g. more than 5 minutes overdue)
+            if (diffMinutes >= -5 && diffMinutes <= 11) {
                 fireTaskNotification(task);
                 notifiedTasks.add(task._id);
                 saveNotifiedTasks();
             }
         });
     }
+
+    // Diagnostic tool to test notifications
+    window.testNotification = function() {
+        if (Notification.permission !== 'granted') {
+            Notification.requestPermission().then(p => {
+                if (p === 'granted') fireTaskNotification({ title: 'Test Task', priority: 'High', _id: 'test' });
+                else showToast('Please enable notifications in your browser settings.', 'error');
+            });
+        } else {
+            fireTaskNotification({ title: 'Test Notification', priority: 'High', _id: 'test' });
+        }
+    };
 
     function fireTaskNotification(task) {
         const priorityEmoji = { High: '🔴', Medium: '🟡', Low: '🟢' };
