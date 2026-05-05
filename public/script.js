@@ -315,13 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearCompletedBtn.addEventListener('click', clearCompletedTasks);
 
         // Modal
-        openModalBtn.addEventListener('click', () => {
-            editingTaskId = null;
-            modalTitle.textContent = 'Create New Task';
-            modalSubmitBtn.textContent = 'Save Task';
-            resetFormDefaults();
-            modalOverlay.classList.add('active');
-        });
+        openModalBtn.addEventListener('click', () => openModal());
         
         closeModalBtn.addEventListener('click', () => modalOverlay.classList.remove('active'));
         modalOverlay.addEventListener('click', (e) => {
@@ -345,6 +339,14 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.addEventListener('keypress', (e) => {
             if(e.key === 'Enter') handleChatSubmit();
         });
+    }
+
+    function openModal() {
+        editingTaskId = null;
+        modalTitle.textContent = 'Create New Task';
+        modalSubmitBtn.textContent = 'Save Task';
+        resetFormDefaults();
+        modalOverlay.classList.add('active');
     }
 
     function resetFormDefaults() {
