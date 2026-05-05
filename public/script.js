@@ -577,6 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const savedTask = await res.json();
                 tasks.push(savedTask);
                 showToast('Task added successfully!', 'success');
+                fireTaskNotification(savedTask, "New Task Created! ✨", `"${savedTask.title}" has been added to your workflow.`);
             }
             
             modalOverlay.classList.remove('active');
@@ -600,6 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 refreshData();
                 if(!currentStatus) {
                     showToast('Task completed! Great job!', 'success');
+                    fireTaskNotification(updatedTask, "Task Completed! 🏆", `"${updatedTask.title}" has been marked as done.`);
                 }
             }
         } catch (error) {
@@ -1231,20 +1233,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    function fireTaskNotification(task) {
+    function fireTaskNotification(task, customTitle = null, customBody = null) {
         const priorityEmoji = { High: '🔴', Medium: '🟡', Low: '🟢' };
         const emoji = priorityEmoji[task.priority] || '📋';
 
-        const notification = new Notification(`${emoji} Task Starting Soon!`, {
-            body: `"${task.title}" starts at ${task.time}${task.category ? ' · ' + task.category : ''}`,
+        const title = customTitle || `${emoji} Task Starting Soon!`;
+        const body = customBody || `"${task.title}" starts at ${task.time}${task.category ? ' · ' + task.category : ''}`;
+
+        const notification = new Notification(title, {
+            body: body,
             icon: '/favicon.ico',
             badge: '/favicon.ico',
-            tag: `task-${task._id}`,  // prevents duplicate notifications
+            tag: `task-${task._id}-${customTitle ? 'action' : 'reminder'}`,
             requireInteraction: true,
             silent: false
         });
 
-        // Clicking the notification focuses the app tab
         notification.onclick = () => {
             window.focus();
             notification.close();
