@@ -16,6 +16,50 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// --- Contact Form Routes ---
+
+// Public submission
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { name, email, message } = req.body;
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: 'Please fill in all fields.' });
+    }
+    const newContact = new Contact({ name, email, message });
+    await newContact.save();
+    res.status(201).json({ message: 'Thank you for your message! We will get back to you soon.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin view (protected by secret)
+app.get('/api/admin/contacts', async (req, res) => {
+  const secret = req.headers['x-admin-secret'];
+  if (secret !== process.env.ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    const contacts = await Contact.find().sort({ createdAt: -1 });
+    res.json(contacts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin delete
+app.delete('/api/admin/contacts/:id', async (req, res) => {
+  const secret = req.headers['x-admin-secret'];
+  if (secret !== process.env.ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    await Contact.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Message deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Connect to MongoDB
@@ -139,48 +183,7 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// --- Contact Form Routes ---
-
-// Public submission
-app.post('/api/contact', async (req, res) => {
-  try {
-    const { name, email, message } = req.body;
-    if (!name || !email || !message) {
-      return res.status(400).json({ error: 'Please fill in all fields.' });
-    }
-    const newContact = new Contact({ name, email, message });
-    await newContact.save();
-    res.status(201).json({ message: 'Thank you for your message! We will get back to you soon.' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Admin view (protected by secret)
-app.get('/api/admin/contacts', async (req, res) => {
-  const secret = req.headers['x-admin-secret'];
-  if (secret !== process.env.ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized' });
-
-  try {
-    const contacts = await Contact.find().sort({ createdAt: -1 });
-    res.json(contacts);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Admin delete
-app.delete('/api/admin/contacts/:id', async (req, res) => {
-  const secret = req.headers['x-admin-secret'];
-  if (secret !== process.env.ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized' });
-
-  try {
-    await Contact.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Message deleted' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+// (Contact routes moved above)
 
 
 app.post('/api/chat', authenticateToken, async (req, res) => {
