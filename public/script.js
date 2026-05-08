@@ -1,4 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Register Service Worker for Mobile Notifications
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('Service Worker registered', reg))
+            .catch(err => console.warn('Service Worker registration failed', err));
+    }
+
     // Auth Flow Logic
     const authOverlay = document.getElementById('authOverlay');
     const authForm = document.getElementById('authForm');
@@ -546,44 +553,74 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleTaskSubmit(e) {
         e.preventDefault();
         
+        const submitBtn = document.getElementById('modalSubmitBtn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+
         const taskData = {
-            title: document.getElementById('title').value,
-            description: document.getElementById('description').value,
-            date: document.getElementById('date').value,
-            time: document.getElementById('time').value,
-            priority: document.getElementById('priority').value,
-            category: document.getElementById('category').value,
-            isDaily: document.getElementById('isDaily').checked
+            title: document.getElementById('title')?.value || '',
+            description: document.getElementById('description')?.value || '',
+            date: document.getElementById('date')?.value || '',
+            time: document.getElementById('time')?.value || '',
+            priority: document.getElementById('priority')?.value || 'Medium',
+            category: document.getElementById('category')?.value || 'Other',
+            isDaily: document.getElementById('isDaily')?.checked || false
         };
 
         try {
+            let res;
             if (editingTaskId) {
-                const res = await fetch(`/api/tasks/${editingTaskId}`, {
+                res = await fetch(`/api/tasks/${editingTaskId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(taskData)
                 });
-                if(!res.ok) throw new Error('Failed to update task');
-                const updatedTask = await res.json();
-                tasks = tasks.map(t => t._id === editingTaskId ? updatedTask : t);
-                showToast('Task updated successfully!', 'success');
             } else {
-                const res = await fetch('/api/tasks', {
+                res = await fetch('/api/tasks', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(taskData)
                 });
-                if(!res.ok) throw new Error('Failed to create task');
-                const savedTask = await res.json();
-                tasks.push(savedTask);
-                showToast('Task added successfully!', 'success');
-                fireTaskNotification(savedTask, "New Task Created! ✨", `"${savedTask.title}" has been added to your workflow.`);
             }
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || `Server returned ${res.status}`);
+            }
+
+            const resultTask = await res.json();
             
-            modalOverlay.classList.remove('active');
+            // Success Path
+            if (editingTaskId) {
+                tasks = tasks.map(t => t._id === editingTaskId ? resultTask : t);
+                showToast('Task updated successfully!', 'success');
+            } else {
+                tasks.push(resultTask);
+                showToast('Task added successfully!', 'success');
+                
+                // Fire notification safely
+                try {
+                    fireTaskNotification(resultTask, "New Task Created! ✨", `"${resultTask.title}" has been added to your workflow.`);
+                } catch (nErr) {
+                    console.warn("Notification error:", nErr);
+                }
+            }
+
+            // Always close modal and refresh on success
+            if (modalOverlay) modalOverlay.classList.remove('active');
+            editingTaskId = null;
             refreshData();
+
         } catch (error) {
-            showToast('Error saving task', 'error');
+            console.error("Task submission error:", error);
+            showToast(error.message || 'Error saving task', 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = editingTaskId ? 'Save Changes' : 'Save Task';
+            }
         }
     }
 
@@ -601,7 +638,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 refreshData();
                 if(!currentStatus) {
                     showToast('Task completed! Great job!', 'success');
-                    fireTaskNotification(updatedTask, "Task Completed! 🏆", `"${updatedTask.title}" has been marked as done.`);
+                    try {
+                        fireTaskNotification(updatedTask, "Task Completed! 🏆", `"${updatedTask.title}" has been marked as done.`);
+                    } catch (nErr) {
+                        console.warn("Notification could not be fired:", nErr);
+                    }
                 }
             }
         } catch (error) {
@@ -1233,26 +1274,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    function fireTaskNotification(task, customTitle = null, customBody = null) {
-        const priorityEmoji = { High: '🔴', Medium: '🟡', Low: '🟢' };
-        const emoji = priorityEmoji[task.priority] || '📋';
+    async function fireTaskNotification(task, customTitle = null, customBody = null) {
+        // Feature detection for Notification API
+        if (!("Notification" in window)) {
+            console.log("This browser does not support desktop notifications");
+            return;
+        }
 
-        const title = customTitle || `${emoji} Task Starting Soon!`;
-        const body = customBody || `"${task.title}" starts at ${task.time}${task.category ? ' · ' + task.category : ''}`;
+        // Check permission
+        if (Notification.permission !== "granted") {
+            return;
+        }
 
-        const notification = new Notification(title, {
-            body: body,
-            icon: '/favicon.ico',
-            badge: '/favicon.ico',
-            tag: `task-${task._id}-${customTitle ? 'action' : 'reminder'}`,
-            requireInteraction: true,
-            silent: false
-        });
+        try {
+            const priorityEmoji = { High: '🔴', Medium: '🟡', Low: '🟢' };
+            const emoji = priorityEmoji[task.priority] || '📋';
 
-        notification.onclick = () => {
-            window.focus();
-            notification.close();
-        };
+            const title = customTitle || `${emoji} Task Starting Soon!`;
+            const body = customBody || `"${task.title}" starts at ${task.time}${task.category ? ' · ' + task.category : ''}`;
+            const options = {
+                body: body,
+                icon: '/favicon.ico',
+                badge: '/favicon.ico',
+                tag: `task-${task._id}-${customTitle ? 'action' : 'reminder'}`,
+                requireInteraction: true,
+                silent: false,
+                vibrate: [200, 100, 200] // Added vibration for mobile
+            };
+
+            // Use Service Worker if available (Preferred for Mobile)
+            if ('serviceWorker' in navigator) {
+                const reg = await navigator.serviceWorker.ready;
+                if (reg && reg.showNotification) {
+                    await reg.showNotification(title, options);
+                    return;
+                }
+            }
+
+            // Fallback to standard Notification (Desktop)
+            const notification = new Notification(title, options);
+            notification.onclick = () => {
+                window.focus();
+                notification.close();
+            };
+        } catch (e) {
+            console.warn("Failed to create notification:", e);
+        }
     }
 
 });
