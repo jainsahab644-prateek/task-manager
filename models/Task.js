@@ -41,7 +41,32 @@ const taskSchema = new mongoose.Schema({
   isCompleted: {
     type: Boolean,
     default: false
-  }
+  },
+  endTime: {
+    type: String // format HH:MM
+  },
+  subtasks: [{
+    title: String,
+    isCompleted: {
+      type: Boolean,
+      default: false
+    }
+  }],
+  currentStreak: {
+    type: Number,
+    default: 0
+  },
+  longestStreak: {
+    type: Number,
+    default: 0
+  },
+  lastCompletedDate: {
+    type: String // format YYYY-MM-DD
+  },
+  tags: [{
+    type: String,
+    trim: true
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Task', taskSchema);

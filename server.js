@@ -144,13 +144,94 @@ app.post('/api/tasks', authenticateToken, async (req, res) => {
   }
 });
 
-// Update a task (e.g. mark as completed, edit details)
+// Update a task (e.g. mark as completed, edit details, track streaks)
 app.put('/api/tasks/:id', authenticateToken, async (req, res) => {
   try {
-    const updatedTask = await Task.findOneAndUpdate({ _id: req.params.id, userId: req.user.id }, req.body, { returnDocument: 'after' });
+    const taskId = req.params.id;
+    const userId = req.user.id;
+    const updates = req.body;
+    
+    const currentTask = await Task.findOne({ _id: taskId, userId: userId });
+    if (!currentTask) return res.status(404).json({ error: 'Task not found' });
+
+    if (currentTask.isDaily && updates.isCompleted !== undefined) {
+      if (updates.isCompleted && !currentTask.isCompleted) {
+        const today = new Date().toISOString().split('T')[0];
+        const d = new Date();
+        d.setDate(d.getDate() - 1);
+        const yesterday = d.toISOString().split('T')[0];
+
+        if (currentTask.lastCompletedDate === yesterday) {
+          updates.currentStreak = (currentTask.currentStreak || 0) + 1;
+        } else if (currentTask.lastCompletedDate !== today) {
+          updates.currentStreak = 1;
+        } else {
+          updates.currentStreak = currentTask.currentStreak || 1;
+        }
+
+        updates.lastCompletedDate = today;
+        updates.longestStreak = Math.max(currentTask.longestStreak || 0, updates.currentStreak);
+      } else if (!updates.isCompleted && currentTask.isCompleted) {
+        const today = new Date().toISOString().split('T')[0];
+        if (currentTask.lastCompletedDate === today) {
+           updates.currentStreak = Math.max(0, (currentTask.currentStreak || 1) - 1);
+           // We keep lastCompletedDate for simplicity, or it could be reverted
+        }
+      }
+    }
+
+    const updatedTask = await Task.findOneAndUpdate({ _id: taskId, userId: userId }, updates, { new: true });
     res.json(updatedTask);
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// Add a subtask
+app.post('/api/tasks/:id/subtasks', authenticateToken, async (req, res) => {
+  try {
+    const { title } = req.body;
+    const task = await Task.findOne({ _id: req.params.id, userId: req.user.id });
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+    
+    task.subtasks.push({ title, isCompleted: false });
+    await task.save();
+    res.json(task);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update a subtask
+app.put('/api/tasks/:taskId/subtasks/:subtaskId', authenticateToken, async (req, res) => {
+  try {
+    const task = await Task.findOne({ _id: req.params.taskId, userId: req.user.id });
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+    
+    const subtask = task.subtasks.id(req.params.subtaskId);
+    if (!subtask) return res.status(404).json({ error: 'Subtask not found' });
+    
+    if (req.body.isCompleted !== undefined) subtask.isCompleted = req.body.isCompleted;
+    if (req.body.title !== undefined) subtask.title = req.body.title;
+    
+    await task.save();
+    res.json(task);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete a subtask
+app.delete('/api/tasks/:taskId/subtasks/:subtaskId', authenticateToken, async (req, res) => {
+  try {
+    const task = await Task.findOne({ _id: req.params.taskId, userId: req.user.id });
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+    
+    task.subtasks.pull(req.params.subtaskId);
+    await task.save();
+    res.json(task);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -209,11 +290,54 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
       }
     };
 
+    const createTaskTool = {
+      name: "createTask",
+      description: "Create a new task for the user.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          title: { type: "STRING", description: "Title of the task." },
+          date: { type: "STRING", description: "Date in YYYY-MM-DD format." },
+          time: { type: "STRING", description: "Start time in HH:MM format." },
+          endTime: { type: "STRING", description: "End time in HH:MM format (optional)." },
+          priority: { type: "STRING", description: "Priority: High, Medium, Low (default: Medium)." },
+          category: { type: "STRING", description: "Category: Work, Personal, Study, Health, Other (default: Other)." },
+          tags: { type: "ARRAY", items: { type: "STRING" }, description: "Optional tags to attach to the task." }
+        },
+        required: ["title", "date", "time"]
+      }
+    };
+
+    const deleteTaskTool = {
+      name: "deleteTask",
+      description: "Delete a task by its exact taskId.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          taskId: { type: "STRING", description: "The exact _id of the task to delete." }
+        },
+        required: ["taskId"]
+      }
+    };
+
+    const breakdownTaskTool = {
+      name: "breakdownTask",
+      description: "Break down a complex task into multiple actionable subtasks.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          taskId: { type: "STRING", description: "The exact _id of the task to break down." },
+          subtasks: { type: "ARRAY", items: { type: "STRING" }, description: "An array of subtask titles to add to the task." }
+        },
+        required: ["taskId", "subtasks"]
+      }
+    };
+
     const rawTasks = await Task.find({ userId: req.user.id });
     // Minify tasks to save massive amounts of input tokens and avoid rate limits
     const tasks = rawTasks.map(t => ({
       id: t._id, title: t.title, priority: t.priority,
-      date: t.date, time: t.time, category: t.category, completed: t.isCompleted
+      date: t.date, time: t.time, endTime: t.endTime, category: t.category, completed: t.isCompleted, tags: t.tags
     }));
 
     // Calculate local date string for the prompt
@@ -227,16 +351,17 @@ Here is the user's current list of tasks in JSON format:
 ${JSON.stringify(tasks)}
 
 IMPORTANT RULES:
-1. If the user asks to reschedule a task, DO NOT immediately call the 'rescheduleTask' function unless they have explicitly provided BOTH a target date and time.
-2. If they ask to reschedule but haven't specified the date AND time, politely ask them: "Sure, what date and time would you like to reschedule this task to?"
-3. Once they provide the date and time, call the 'rescheduleTask' function with the correct taskId, newDate (YYYY-MM-DD), and newTime (HH:MM).
-4. If you call a function, you do not need to say anything else.
-5. If they ask a general productivity question, answer concisely.`;
+1. If the user asks to reschedule a task, use the 'rescheduleTask' tool, but ensure you have the date and time.
+2. If they ask to create a task, use 'createTask'. Ensure you have a date and time (assume today and a reasonable time if not specified, but verify if unsure).
+3. If they ask to delete a task, use 'deleteTask'.
+4. If they ask to break down a task, use 'breakdownTask' to generate a list of logical subtasks and add them.
+5. If you call a function, you do not need to say anything else.
+6. If they ask a general productivity question, answer concisely.`;
 
     const model = genAI.getGenerativeModel({
       model: "gemini-flash-latest",
       systemInstruction: systemPrompt,
-      tools: [{ functionDeclarations: [rescheduleTaskTool] }]
+      tools: [{ functionDeclarations: [rescheduleTaskTool, createTaskTool, deleteTaskTool, breakdownTaskTool] }]
     });
 
     const chat = model.startChat({
@@ -279,6 +404,34 @@ IMPORTANT RULES:
         return res.json({
           reply: `I have successfully rescheduled the task to ${newDate} at ${newTime}. Let me know if you need anything else!`,
           refreshTasks: true
+        });
+      } else if (call.name === "createTask") {
+        const newTask = new Task({ ...call.args, userId: req.user.id });
+        await newTask.save();
+        return res.json({
+          reply: `I have created the task "${call.args.title}" for ${call.args.date} at ${call.args.time}.`,
+          refreshTasks: true
+        });
+      } else if (call.name === "deleteTask") {
+        await Task.findOneAndDelete({ _id: call.args.taskId, userId: req.user.id });
+        return res.json({
+          reply: `I have deleted the task.`,
+          refreshTasks: true
+        });
+      } else if (call.name === "breakdownTask") {
+        const taskToUpdate = await Task.findOne({ _id: call.args.taskId, userId: req.user.id });
+        if (taskToUpdate) {
+            const newSubtasks = call.args.subtasks.map(title => ({ title, isCompleted: false }));
+            taskToUpdate.subtasks.push(...newSubtasks);
+            await taskToUpdate.save();
+            return res.json({
+              reply: `I have added ${newSubtasks.length} subtasks to the task.`,
+              refreshTasks: true
+            });
+        }
+        return res.json({
+          reply: `I couldn't find that task to break down.`,
+          refreshTasks: false
         });
       }
     }
