@@ -564,8 +564,10 @@ document.addEventListener('DOMContentLoaded', () => {
             description: document.getElementById('description')?.value || '',
             date: document.getElementById('date')?.value || '',
             time: document.getElementById('time')?.value || '',
+            endTime: document.getElementById('endTime')?.value || '',
             priority: document.getElementById('priority')?.value || 'Medium',
             category: document.getElementById('category')?.value || 'Other',
+            tags: document.getElementById('tags')?.value ? document.getElementById('tags').value.split(',').map(t => t.trim()).filter(Boolean) : [],
             isDaily: document.getElementById('isDaily')?.checked || false
         };
 
@@ -684,6 +686,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function addSubtask(taskId, title) {
+        try {
+            const res = await fetch(`/api/tasks/${taskId}/subtasks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title })
+            });
+            if(res.ok) {
+                const updatedTask = await res.json();
+                tasks = tasks.map(t => t._id === taskId ? updatedTask : t);
+                refreshData();
+            }
+        } catch (error) {
+            showToast('Error adding subtask', 'error');
+        }
+    }
+
+    async function toggleSubtaskStatus(taskId, subtaskId, isCompleted) {
+        try {
+            const res = await fetch(`/api/tasks/${taskId}/subtasks/${subtaskId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isCompleted })
+            });
+            if(res.ok) {
+                const updatedTask = await res.json();
+                tasks = tasks.map(t => t._id === taskId ? updatedTask : t);
+                refreshData();
+            }
+        } catch (error) {
+            showToast('Error updating subtask', 'error');
+        }
+    }
+
     function editTask(id) {
         const task = tasks.find(t => t._id === id);
         if(!task) return;
@@ -696,8 +732,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('description').value = task.description || '';
         document.getElementById('date').value = task.date;
         document.getElementById('time').value = task.time;
+        if (document.getElementById('endTime')) document.getElementById('endTime').value = task.endTime || '';
         document.getElementById('priority').value = task.priority || 'Medium';
         document.getElementById('category').value = task.category || 'Other';
+        if (document.getElementById('tags')) document.getElementById('tags').value = (task.tags || []).join(', ');
         document.getElementById('isDaily').checked = task.isDaily;
 
         modalOverlay.classList.add('active');
@@ -811,13 +849,27 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="badges-container">
                                 ${task.category ? `<span class="badge badge-category"><i class="fas fa-tag"></i> ${task.category}</span>` : ''}
                             </div>
+                            <div class="tags-container">
+                                ${(task.tags || []).map(tag => `<span class="task-tag">#${escapeHTML(tag)}</span>`).join('')}
+                            </div>
 
                             ${task.description ? `<p class="task-desc">${escapeHTML(task.description)}</p>` : ''}
                             
                             <div class="task-meta">
                                 <span><i class="far fa-calendar"></i> ${formatDate(task.date)}</span>
-                                <span><i class="far fa-clock"></i> ${task.time}</span>
-                                ${task.isDaily ? `<span class="badge-daily" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9; padding: 0.3rem 0.8rem; border-radius: 12px; font-weight: 700; border: 1px solid rgba(14, 165, 233, 0.3);"><i class="fas fa-redo"></i> Daily Ritual</span>` : ''}
+                                <span><i class="far fa-clock"></i> ${task.time}${task.endTime ? ` - ${task.endTime}` : ''}</span>
+                                ${task.isDaily ? `<span class="badge-daily" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9; padding: 0.3rem 0.8rem; border-radius: 12px; font-weight: 700; border: 1px solid rgba(14, 165, 233, 0.3);"><i class="fas fa-redo"></i> Daily</span>` : ''}
+                                ${task.isDaily && (task.currentStreak > 0) ? `<span class="streak-badge" title="Longest Streak: ${task.longestStreak || 0}"><i class="fas fa-fire"></i> ${task.currentStreak}</span>` : ''}
+                            </div>
+
+                            <div class="subtasks-container">
+                                ${(task.subtasks || []).map(st => `
+                                    <div class="subtask-item ${st.isCompleted ? 'completed' : ''}">
+                                        <input type="checkbox" class="subtask-checkbox" data-subtask-id="${st._id}" ${st.isCompleted ? 'checked' : ''}>
+                                        <span>${escapeHTML(st.title)}</span>
+                                    </div>
+                                `).join('')}
+                                <button class="add-subtask-btn" data-task-id="${task._id}"><i class="fas fa-plus"></i> Add Subtask</button>
                             </div>
                         </div>
                     `;
@@ -830,6 +882,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const deleteBtn = taskEl.querySelector('.delete-btn');
                     deleteBtn.addEventListener('click', () => deleteTask(task._id));
+
+                    const addSubtaskBtn = taskEl.querySelector('.add-subtask-btn');
+                    if (addSubtaskBtn) {
+                        addSubtaskBtn.addEventListener('click', () => {
+                            const title = prompt("Enter subtask title:");
+                            if (title && title.trim() !== '') addSubtask(task._id, title.trim());
+                        });
+                    }
+
+                    taskEl.querySelectorAll('.subtask-checkbox').forEach(cb => {
+                        cb.addEventListener('change', (e) => {
+                            const subtaskId = e.target.getAttribute('data-subtask-id');
+                            toggleSubtaskStatus(task._id, subtaskId, e.target.checked);
+                        });
+                    });
 
                     columnTasks.appendChild(taskEl);
                 });
